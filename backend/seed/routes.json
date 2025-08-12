@@ -1,0 +1,6 @@
+[
+  { "fromName": "Merkato", "toName": "Bole", "fare": 30, "estimatedTimeMin": 35, "roadCondition": "good", "availabilityMin": 8 },
+  { "fromName": "Merkato", "toName": "Piassa", "fare": 10, "estimatedTimeMin": 10, "roadCondition": "good", "availabilityMin": 5 },
+  { "fromName": "Piassa", "toName": "Kera", "fare": 20, "estimatedTimeMin": 25, "roadCondition": "medium", "availabilityMin": 10 },
+  { "fromName": "Kera", "toName": "Bole", "fare": 18, "estimatedTimeMin": 22, "roadCondition": "good", "availabilityMin": 7 }
+]

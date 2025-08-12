@@ -1,0 +1,6 @@
+[
+  { "name": "Merkato", "lat": 9.014, "lng": 38.753, "address": "Merkato main square" },
+  { "name": "Bole", "lat": 8.995, "lng": 38.802, "address": "Bole area" },
+  { "name": "Piassa", "lat": 9.022, "lng": 38.750, "address": "Piassa" },
+  { "name": "Kera", "lat": 8.980, "lng": 38.770, "address": "Kera terminal" }
+]
