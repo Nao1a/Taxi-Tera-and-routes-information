@@ -80,24 +80,32 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const user = await User.findOne({username})
 
-    if (user && (await bcrypt.compare(password , user.password))) {
-        if (! user.isVerified) {
-            res.status(401);
-            throw new Error("Please verify your email before logging in");
-        }
-        const accessToken = jwt.sign({
-            user: {
-                username: user.username,
-                id: user.id,
-                role: user.role
-            }
-        }, process.env.JWT_SECRET, { expiresIn: '166h' });
-        res.status(200).json({ accessToken });
-
-    } else {
+    if (!user || !(await bcrypt.compare(password , user.password))) {
         res.status(401);
         throw new Error("Invalid username or password");
     }
+    if (!user.isVerified) {
+        // Send (or re-send) verification email & provide token so client can direct user
+        try {
+            const token = await sendVerificationEmail(user, req);
+            return res.status(403).json({
+                needsVerification: true,
+                email: user.email,
+                message: 'Email not verified. Verification email sent.',
+                verifyToken: token
+            });
+        } catch (e) {
+            return res.status(403).json({
+                needsVerification: true,
+                email: user.email,
+                message: 'Email not verified. Failed to send verification email, try resending.',
+            });
+        }
+    }
+    const accessToken = jwt.sign({
+        user: { username: user.username, id: user.id, role: user.role }
+    }, process.env.JWT_SECRET, { expiresIn: '166h' });
+    res.status(200).json({ accessToken, username: user.username, email: user.email, role: user.role });
 })
 
 const currentUser = asyncHandler(async (req, res) => {
@@ -168,11 +176,39 @@ const requestVerificationEmail = asyncHandler(async (req, res) => {
     res.json({ message: 'Verification email sent. Please check your inbox.', verifyToken: token });
 });
 
+// Stateless logout (client just discards token). Provided for symmetry/future blacklist.
+const logoutUser = asyncHandler(async (req, res) => {
+    return res.json({ message: 'Logged out (client token invalidated client-side).' });
+});
+
+// Delete current authenticated user after confirming password
+const deleteCurrentUser = asyncHandler(async (req, res) => {
+    const { password } = req.body;
+    if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    if (!password) {
+        return res.status(400).json({ message: 'Password required.' });
+    }
+    const user = await User.findById(req.user.id);
+    if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+        return res.status(401).json({ message: 'Incorrect password.' });
+    }
+    await user.deleteOne();
+    return res.json({ message: 'Account deleted.' });
+});
+
 
 module.exports = {
     SignupUser,
     loginUser,
     currentUser,
     verifyEmail,
-    requestVerificationEmail
+    requestVerificationEmail,
+    logoutUser,
+    deleteCurrentUser
 };

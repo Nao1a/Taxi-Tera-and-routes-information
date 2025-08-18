@@ -8,10 +8,13 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = authService.getCurrentUser();
-    if (user) {
+    const handler = () => {
+      const user = authService.getCurrentUser();
       setCurrentUser(user);
-    }
+    };
+    window.addEventListener('auth-changed', handler);
+    handler(); // initial load
+    return () => window.removeEventListener('auth-changed', handler);
   }, []);
 
   const handleLogout = () => {
@@ -21,7 +24,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-transparent text-white p-4 flex justify-between items-center">
+  <nav className="bg-black text-white p-4 flex justify-between items-center border-b border-gray-800">
       <div className="text-3xl font-bold">
         <Link to="/">Redat</Link>
       </div>
@@ -30,12 +33,12 @@ const Navbar = () => {
           <div>
             <button onClick={() => setDropdownOpen(!dropdownOpen)} className="focus:outline-none">
               <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-black font-bold">
-                {currentUser.username.charAt(0).toUpperCase()}
+                {(currentUser?.username?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
               </div>
             </button>
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 text-black">
-                <Link to="/profile" className="block px-4 py-2 text-sm hover:bg-gray-100">Profile</Link>
+                <Link to="/delete-account" className="block px-4 py-2 text-sm hover:bg-gray-100">Delete Account</Link>
                 <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Logout</button>
               </div>
             )}

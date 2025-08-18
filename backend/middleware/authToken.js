@@ -8,11 +8,11 @@ const validateToken = asyncHandler(async(req, res, next) => {
     
 
     let authHeader = req.headers.Authorization || req.headers.authorization;
+    let bearerToken;
     if (authHeader && authHeader.startsWith("Bearer")) {
-        bearertoken = authHeader.split(" ")[1] || req.cookies.token;
+        bearerToken = authHeader.split(" ")[1] || req.cookies?.token;
     }
-    
-    token = bearertoken;
+    token = bearerToken;
     if (!token) { 
         res.status(401);
         throw new Error("User is not authorized or token is missing");

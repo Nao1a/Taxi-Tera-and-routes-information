@@ -10,14 +10,18 @@ const SignupPage = () => {
 
   const handleSignup = (e) => {
     e.preventDefault();
-    authService.signup(username, email, password).then(
-      () => {
-        navigate('/login');
-      },
-      (error) => {
+    authService.signup(username, email, password)
+      .then((res) => {
+        const token = res.data?.verifyToken;
+        const qp = new URLSearchParams();
+        if (token) qp.set('token', token);
+        qp.set('email', email);
+        qp.set('username', username);
+        navigate(`/verify-email?${qp.toString()}`);
+      })
+      .catch((error) => {
         console.log(error);
-      }
-    );
+      });
   };
 
   return (
