@@ -2,5 +2,21 @@
   { "name": "Merkato", "lat": 9.014, "lng": 38.753, "address": "Merkato main square" },
   { "name": "Bole", "lat": 8.995, "lng": 38.802, "address": "Bole area" },
   { "name": "Piassa", "lat": 9.022, "lng": 38.750, "address": "Piassa" },
-  { "name": "Kera", "lat": 8.980, "lng": 38.770, "address": "Kera terminal" }
+  { "name": "Kera", "lat": 8.980, "lng": 38.770, "address": "Kera terminal" },
+  { "name": "Megenagna", "lat": 9.008, "lng": 38.812, "address": "Megenagna roundabout" },
+  { "name": "SarBet", "lat": 8.984, "lng": 38.759, "address": "SarBet area" },
+  { "name": "Torhailoch", "lat": 8.985, "lng": 38.741, "address": "Torhailoch" },
+  { "name": "Mexico", "lat": 9.000, "lng": 38.742, "address": "Mexico square" },
+  { "name": "Arat Kilo", "lat": 9.034, "lng": 38.763, "address": "Arat Kilo" },
+  { "name": "Stadium", "lat": 9.008, "lng": 38.775, "address": "National Stadium" },
+  { "name": "Lafto", "lat": 8.950, "lng": 38.748, "address": "Lafto area" },
+  { "name": "Summit", "lat": 9.030, "lng": 38.840, "address": "Summit" },
+  { "name": "CMC", "lat": 9.030, "lng": 38.825, "address": "CMC area" },
+  { "name": "Gurd Shola", "lat": 9.050, "lng": 38.820, "address": "Gurd Shola" },
+  { "name": "Saris", "lat": 8.950, "lng": 38.780, "address": "Saris market" },
+  { "name": "Ayat", "lat": 9.050, "lng": 38.870, "address": "Ayat area" },
+  { "name": "Gofa", "lat": 8.980, "lng": 38.760, "address": "Gofa Camp" },
+  { "name": "Kazanchis", "lat": 9.016, "lng": 38.760, "address": "Kazanchis" },
+  { "name": "Shiro Meda", "lat": 9.060, "lng": 38.770, "address": "Shiro Meda" },
+  { "name": "Bambis", "lat": 9.005, "lng": 38.760, "address": "Bambis" }
 ]
