@@ -18,5 +18,8 @@
   { "name": "Gofa", "lat": 8.980, "lng": 38.760, "address": "Gofa Camp" },
   { "name": "Kazanchis", "lat": 9.016, "lng": 38.760, "address": "Kazanchis" },
   { "name": "Shiro Meda", "lat": 9.060, "lng": 38.770, "address": "Shiro Meda" },
-  { "name": "Bambis", "lat": 9.005, "lng": 38.760, "address": "Bambis" }
+  { "name": "Bambis", "lat": 9.005, "lng": 38.760, "address": "Bambis" },
+  { "name": "Jemo", "lat": 8.930, "lng": 38.720, "address": "Jemo area"},
+  { "name": "Sebeta", "lat": 8.950, "lng": 38.750, "address": "Sebeta area"},
+  { "name": "Kenteri", "lat": 8.970, "lng": 38.780, "address": "Kenteri area"}
 ]

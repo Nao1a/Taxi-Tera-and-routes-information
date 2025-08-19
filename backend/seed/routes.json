@@ -37,6 +37,7 @@
   { "fromName": "Bole", "toName": "Kazanchis", "fare": 14, "estimatedTimeMin": 16, "roadCondition": "good", "availabilityMin": 6 },
   { "fromName": "Bole", "toName": "Shiro Meda", "fare": 30, "estimatedTimeMin": 37, "roadCondition": "average", "availabilityMin": 10 },
   { "fromName": "Bole", "toName": "Bambis", "fare": 16, "estimatedTimeMin": 18, "roadCondition": "good", "availabilityMin": 7 },
+  { "fromName": "Bambis", "toName": "Bole", "fare": 16, "estimatedTimeMin": 18, "roadCondition": "good", "availabilityMin": 7 },
   { "fromName": "Piassa", "toName": "Kera", "fare": 18, "estimatedTimeMin": 22, "roadCondition": "good", "availabilityMin": 8 },
   { "fromName": "Piassa", "toName": "Megenagna", "fare": 20, "estimatedTimeMin": 24, "roadCondition": "average", "availabilityMin": 8 },
   { "fromName": "Piassa", "toName": "SarBet", "fare": 24, "estimatedTimeMin": 30, "roadCondition": "average", "availabilityMin": 9 },
@@ -97,5 +98,7 @@
   { "fromName": "SarBet", "toName": "Ayat", "fare": 40, "estimatedTimeMin": 47, "roadCondition": "average", "availabilityMin": 12 },
   { "fromName": "SarBet", "toName": "Gofa", "fare": 12, "estimatedTimeMin": 14, "roadCondition": "good", "availabilityMin": 5 },
   { "fromName": "SarBet", "toName": "Kazanchis", "fare": 16, "estimatedTimeMin": 18, "roadCondition": "good", "availabilityMin": 6 },
-  { "fromName": "SarBet", "toName": "Shiro Meda", "fare": 26, "estimatedTimeMin": 31, "roadCondition": "average", "availabilityMin": 9 }
+  { "fromName": "SarBet", "toName": "Shiro Meda", "fare": 26, "estimatedTimeMin": 31, "roadCondition": "average", "availabilityMin": 9 },
+  { "fromName": "Jemo", "toName": "Mexico", "fare": 30, "estimatedTimeMin": 45, "roadCondition": "average", "availabilityMin": 15 },
+  { "fromName": "Sebeta", "toName": "Kenteri", "fare": 30, "estimatedTimeMin": 45, "roadCondition": "average", "availabilityMin": 15 }
 ]
