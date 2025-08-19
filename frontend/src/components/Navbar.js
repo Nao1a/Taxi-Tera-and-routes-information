@@ -26,7 +26,7 @@ const Navbar = () => {
   return (
   <nav className="bg-black text-white p-4 flex justify-between items-center border-b border-gray-800">
       <div className="text-3xl font-bold">
-        <Link to="/">Redat</Link>
+  <Link to="/">TERAS</Link>
       </div>
       <div className="relative">
         {currentUser ? (

@@ -99,6 +99,7 @@
   { "fromName": "SarBet", "toName": "Gofa", "fare": 12, "estimatedTimeMin": 14, "roadCondition": "good", "availabilityMin": 5 },
   { "fromName": "SarBet", "toName": "Kazanchis", "fare": 16, "estimatedTimeMin": 18, "roadCondition": "good", "availabilityMin": 6 },
   { "fromName": "SarBet", "toName": "Shiro Meda", "fare": 26, "estimatedTimeMin": 31, "roadCondition": "average", "availabilityMin": 9 },
-  { "fromName": "Jemo", "toName": "Mexico", "fare": 30, "estimatedTimeMin": 45, "roadCondition": "average", "availabilityMin": 15 },
-  { "fromName": "Sebeta", "toName": "Kenteri", "fare": 30, "estimatedTimeMin": 45, "roadCondition": "average", "availabilityMin": 15 }
+  { "fromName": "Jemo", "toName": "Mexico", "fare": 35, "estimatedTimeMin": 45, "roadCondition": "average", "availabilityMin": 15 },
+  { "fromName": "Sebeta", "toName": "Kenteri", "fare": 15, "estimatedTimeMin": 20, "roadCondition": "average", "availabilityMin": 5 },
+  { "fromName": "Kenteri", "toName": "Jemo", "fare": 20, "estimatedTimeMin": 30, "roadCondition": "average", "availabilityMin": 10 }
 ]

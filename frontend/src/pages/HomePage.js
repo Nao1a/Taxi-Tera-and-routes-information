@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import RouteDetails from '../components/RouteDetails';
+import Autocomplete from '../components/Autocomplete';
 
 const HomePage = () => {
   const [teras, setTeras] = useState([]);
@@ -12,7 +13,8 @@ const HomePage = () => {
   useEffect(() => {
     const fetchTeras = async () => {
       try {
-        const response = await fetch('/api/teras');
+  // Backend mounts teras route at /api/search/teras (searchRoutes mounted at /api/search)
+  const response = await fetch('/api/search/teras');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -51,32 +53,23 @@ const HomePage = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-white">Redat</h1>
-        <p className="text-gray-400">Check Taxi Money and Route</p>
+  <h1 className="text-3xl font-bold text-white">TERAS</h1>
+  <p className="text-gray-400">Taxi Routes & Fare Explorer</p>
       </div>
       <div className="mt-8 w-full max-w-md px-4">
         <div className="flex flex-col space-y-4">
-          <input
-            type="text"
-            list="tera-list"
-            placeholder="Starting Point"
+          <Autocomplete
+            options={teras}
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="w-full p-4 rounded-2xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={setFrom}
+            placeholder="Starting Point"
           />
-          <input
-            type="text"
-            list="tera-list"
-            placeholder="Where do you want to go?"
+          <Autocomplete
+            options={teras}
             value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="w-full p-4 rounded-2xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={setTo}
+            placeholder="Where do you want to go?"
           />
-          <datalist id="tera-list">
-            {teras.map((tera) => (
-              <option key={tera.id} value={tera.name} />
-            ))}
-          </datalist>
           <div className="relative">
             <select
               value={optimizeBy}

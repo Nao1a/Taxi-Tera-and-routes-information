@@ -3,6 +3,6 @@ import App from './App';
 
 test('renders the main heading', () => {
   render(<App />);
-  const headingElement = screen.getByRole('heading', { name: /Redat/i, level: 1 });
+  const headingElement = screen.getByRole('heading', { name: /TERAS/i, level: 1 });
   expect(headingElement).toBeInTheDocument();
 });
