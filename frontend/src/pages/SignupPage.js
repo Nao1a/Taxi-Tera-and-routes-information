@@ -6,22 +6,45 @@ const SignupPage = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = (e) => {
     e.preventDefault();
-    authService.signup(username, email, password)
+    setErrorMsg('');
+    const u = username.trim();
+    const em = email.trim();
+    const pw = password;
+    // Basic client-side checks mirroring backend
+    if (!u || !em || !pw) {
+      setErrorMsg('All fields are required.');
+      return;
+    }
+    if (u.length < 3) {
+      setErrorMsg('Username must be at least 3 characters.');
+      return;
+    }
+    if (pw.length < 8) {
+      setErrorMsg('Password must be at least 8 characters.');
+      return;
+    }
+    setLoading(true);
+    authService.signup(u, em, pw)
       .then((res) => {
         const token = res.data?.verifyToken;
         const qp = new URLSearchParams();
         if (token) qp.set('token', token);
-        qp.set('email', email);
-        qp.set('username', username);
+        qp.set('email', em);
+        qp.set('username', u);
         navigate(`/verify-email?${qp.toString()}`);
       })
       .catch((error) => {
-        console.log(error);
-      });
+        // Axios error shape
+        const serverMsg = error?.response?.data?.message;
+        setErrorMsg(serverMsg || 'Signup failed');
+      })
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -52,9 +75,10 @@ const SignupPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <button className="w-full p-4 rounded-2xl bg-white text-black font-bold text-lg shadow-lg">
-            Sign up
+          <button disabled={loading} className="w-full p-4 rounded-2xl bg-white text-black font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+            {loading ? 'Creating account...' : 'Sign up'}
           </button>
+          {errorMsg && <p className="text-sm text-red-400 text-center">{errorMsg}</p>}
         </form>
         <div className="text-center text-gray-400">
           Already have an account?{' '}
