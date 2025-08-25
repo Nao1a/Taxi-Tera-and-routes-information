@@ -10,7 +10,7 @@ import DeleteAccountPage from './pages/DeleteAccountPage';
 function App() {
   return (
     <Router>
-      <div className="bg-gray-900 min-h-screen text-white">
+      <div className="bg-white dark:bg-gray-900 min-h-screen text-black dark:text-white">
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
