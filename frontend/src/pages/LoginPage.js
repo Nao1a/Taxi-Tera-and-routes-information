@@ -13,7 +13,14 @@ const LoginPage = () => {
     e.preventDefault();
     setErrorMsg('');
     authService.login(username, password)
-      .then(() => navigate('/'))
+      .then((data) => {
+        const role = data?.role || authService.getCurrentUser()?.role;
+        if (role === 'admin' || role === 'moderator') {
+          navigate('/admin/submissions');
+        } else {
+          navigate('/');
+        }
+      })
       .catch((error) => {
         const status = error?.status;
         const data = error?.data;

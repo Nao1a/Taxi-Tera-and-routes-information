@@ -10,7 +10,9 @@ const UserSchema = new mongoose.Schema({
         enum : ['user', 'moderator', 'admin' , 'taxiOwner'],
         default : 'user'
     },
-    reputation : {type : Number, default : 5}
+    reputation : {type : Number, default : 5},
+    isSubmissionBanned: { type: Boolean, default: false },
+    submissionBanReason: { type: String }
 }, { timestamps : true })
 
 module.exports = mongoose.model('User', UserSchema)

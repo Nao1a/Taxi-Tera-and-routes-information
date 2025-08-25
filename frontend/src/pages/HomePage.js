@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import RouteDetails from '../components/RouteDetails';
 import Autocomplete from '../components/Autocomplete';
 
@@ -9,6 +10,7 @@ const HomePage = () => {
   const [optimizeBy, setOptimizeBy] = useState('fare');
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTeras = async () => {
@@ -93,7 +95,7 @@ const HomePage = () => {
         >
           Continue
         </button>
-        <button className="mt-4 w-full p-4 rounded-2xl border border-gray-300 text-black dark:border-gray-500 dark:text-white font-semibold text-lg">
+        <button onClick={() => navigate('/submit')} className="mt-4 w-full p-4 rounded-2xl border border-gray-300 text-black dark:border-gray-500 dark:text-white font-semibold text-lg">
           Contribute Route Data
         </button>
 

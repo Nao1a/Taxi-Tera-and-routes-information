@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import EmailVerificationPage from './pages/EmailVerificationPage';
 import DeleteAccountPage from './pages/DeleteAccountPage';
+import SubmitDataPage from './pages/SubmitDataPage';
+import AdminSubmissionsPage from './pages/AdminSubmissionsPage';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/delete-account" element={<DeleteAccountPage />} />
+          <Route path="/submit" element={<SubmitDataPage />} />
+          <Route path="/admin/submissions" element={<AdminSubmissionsPage />} />
         </Routes>
       </div>
     </Router>

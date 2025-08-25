@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const userRoutes = require("./routes/userRoutes");
 const searchRoutes = require('./routes/searchRoutes');
 const errorHandler = require('./middleware/ErrorHandler');
+const submissionRoutes = require('./routes/submissionRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const { refreshGraph } = require('./controller/searchController');
 dotenv.config({ path: require('path').join(__dirname, '.env') });
 
@@ -16,6 +18,8 @@ app.use(express.json()); // Middleware to parse JSON bodies
 // Routes
 app.use("/api/users", userRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/submissions', submissionRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Optional admin refresh endpoint (could protect with auth middleware)
 app.post('/api/_admin/refresh-graph', async (req, res, next) => {
