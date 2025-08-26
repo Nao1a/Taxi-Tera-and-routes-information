@@ -1,4 +1,5 @@
 import React from 'react';
+import RouteMap from './RouteMap';
 
 const RouteDetails = ({ route, title }) => {
   if (!route) {
@@ -17,6 +18,9 @@ const RouteDetails = ({ route, title }) => {
       <p className="text-gray-600 dark:text-gray-400">
         <strong>Total Time:</strong> {route.totalTime} minutes
       </p>
+      {Array.isArray(route.coordinates) && route.coordinates.length > 0 && (
+        <RouteMap coordinates={route.coordinates} names={route.path} />
+      )}
     </div>
   );
 };

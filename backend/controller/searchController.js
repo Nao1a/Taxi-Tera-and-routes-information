@@ -12,9 +12,17 @@ async function ensureGraph() {
 
 async function refreshGraph() {
   const routes = await Route.find({ status: 'approved' }).lean();
-  const teras = await TaxiTera.find({}).select('_id name').lean();
+  const teras = await TaxiTera.find({}).select('_id name location').lean();
   global.adjGraph = buildAdjacencyList(routes, teras);
   global.teraNameMap = teras.reduce((acc, t) => { acc[t._id.toString()] = t.name; return acc; }, {});
+  // cache coordinates in [lat, lng] for quick lookup (convert from GeoJSON [lng, lat])
+  global.teraCoordMap = teras.reduce((acc, t) => {
+    const coords = Array.isArray(t.location?.coordinates) ? t.location.coordinates : null;
+    if (coords && coords.length === 2) {
+      acc[t._id.toString()] = [coords[1], coords[0]]; // [lat, lng]
+    }
+    return acc;
+  }, {});
   return global.adjGraph;
 }
 
@@ -39,15 +47,19 @@ async function searchRoute(req, res, next) {
       return res.status(404).json({ message: 'No route found' });
     }
     const namedPath = result.path.map(id => global.teraNameMap[id] || id);
+    const coordsPath = result.path
+      .map(id => global.teraCoordMap?.[id])
+      .filter(Boolean);
     let secondBest = null;
     if (result.secondBest && result.secondBest.path) {
       secondBest = {
         path: result.secondBest.path.map(id => global.teraNameMap[id] || id),
+        coordinates: result.secondBest.path.map(id => global.teraCoordMap?.[id]).filter(Boolean),
         totalFare: result.secondBest.totalFare,
         totalTime: result.secondBest.totalTime
       };
     }
-    const response = { path: namedPath, totalFare: result.totalFare, totalTime: result.totalTime, optimizeBy, secondBest };
+    const response = { path: namedPath, coordinates: coordsPath, totalFare: result.totalFare, totalTime: result.totalTime, optimizeBy, secondBest };
     if (req.query.debug === 'true') {
       response._debug = { fromId, toId, rawPath: result.path };
     }
