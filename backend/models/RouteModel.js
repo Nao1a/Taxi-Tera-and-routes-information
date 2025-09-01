@@ -11,7 +11,7 @@ const RouteSchema = new mongoose.Schema({
     status : {type : String , enum : ['approved', 'pending', 'rejected'], default: 'pending'},
         createdBy: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
         // A normalized undirected key to prevent duplicates regardless of direction
-        undirectedKey: { type: String, index: true }
+        undirectedKey: { type: String }
 
 }, {timestamps: true})
 

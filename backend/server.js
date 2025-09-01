@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const connectDb = require('./config/dbConnection');
 const dotenv = require('dotenv');
 const userRoutes = require("./routes/userRoutes");
@@ -14,6 +15,25 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 connectDb();
 app.use(express.json()); // Middleware to parse JSON bodies
+
+// CORS: allow frontend origins
+const allowedOrigins = [
+  process.env.FRONTEND_ORIGIN,           // e.g., https://your-frontend.example.com
+  'http://localhost:3000',               // local CRA dev server
+].filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // allow non-browser requests (no origin) and whitelisted origins
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'verifytoken'],
+  credentials: false,
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Routes
 app.use("/api/users", userRoutes);

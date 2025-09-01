@@ -1,9 +1,9 @@
-import axios from 'axios';
+import api from './apiClient';
 
 const API_URL = '/api/users/';
 
 const signup = (username, email, password) => {
-  return axios.post(API_URL + 'signup', {
+  return api.post(API_URL + 'signup', {
     username,
     email,
     password,
@@ -12,7 +12,7 @@ const signup = (username, email, password) => {
 
 // Login now uses username instead of email
 const login = (username, password) => {
-  return axios
+  return api
     .post(API_URL + 'login', { username, password })
     .then((response) => {
       if (response.data.accessToken) {
@@ -33,14 +33,14 @@ const login = (username, password) => {
 };
 
 const verifyEmail = (token, code) => {
-  return axios.get(`${API_URL}verify-email`, {
+  return api.get(`${API_URL}verify-email`, {
     headers: { verifytoken: `Bearer ${token}` },
     params: { code }
   });
 };
 
 const resendVerification = (email) => {
-  return axios.post(`${API_URL}request-verification-email`, { email });
+  return api.post(`${API_URL}request-verification-email`, { email });
 };
 
 const logout = () => {
@@ -48,7 +48,7 @@ const logout = () => {
   localStorage.removeItem('user');
   // Optionally inform backend (token blacklist not implemented but endpoint exists)
   if (user?.accessToken) {
-    axios.post(API_URL + 'logout', {}, { headers: { Authorization: `Bearer ${user.accessToken}` } }).catch(()=>{});
+  api.post(API_URL + 'logout', {}, { headers: { Authorization: `Bearer ${user.accessToken}` } }).catch(()=>{});
   }
   window.dispatchEvent(new Event('auth-changed'));
 };
@@ -66,7 +66,7 @@ const authService = {
   resendVerification,
   deleteAccount: (password) => {
     const user = getCurrentUser();
-    return axios.delete(API_URL + 'delete', {
+  return api.delete(API_URL + 'delete', {
       headers: { Authorization: `Bearer ${user?.accessToken}` },
       data: { password }
     }).then(res => {
