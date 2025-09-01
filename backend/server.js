@@ -20,6 +20,7 @@ app.use(express.json()); // Middleware to parse JSON bodies
 const allowedOrigins = [
   process.env.FRONTEND_ORIGIN,           // e.g., https://your-frontend.example.com
   'http://localhost:3000',               // local CRA dev server
+  'https://taxi-tera-and-routes-information.vercel.app', // deployed frontend
 ].filter(Boolean);
 
 const corsOptions = {
