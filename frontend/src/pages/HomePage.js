@@ -16,7 +16,7 @@ const HomePage = () => {
     const fetchTeras = async () => {
       try {
   // Backend mounts teras route at /api/search/teras (searchRoutes mounted at /api/search)
-  const response = await fetch('/api/search/teras');
+  const response = await fetch('https://teras-7d3o.onrender.com/api/search/teras');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -39,7 +39,7 @@ const HomePage = () => {
     setResults(null);
     try {
       const params = new URLSearchParams({ from, to, optimizeBy });
-      const response = await fetch(`/api/search?${params}`);
+  const response = await fetch(`https://teras-7d3o.onrender.com/api/search?${params}`);
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.message || 'Search failed');

@@ -19,7 +19,7 @@ const SubmitDataPage = () => {
 
   useEffect(() => {
     // Fetch tera names for suggestions
-    fetch('/api/search/teras')
+  fetch('https://teras-7d3o.onrender.com/api/search/teras')
       .then(r => r.ok ? r.json() : [])
       .then(list => setTeraOptions(Array.isArray(list) ? list : []))
       .catch(() => setTeraOptions([]));
