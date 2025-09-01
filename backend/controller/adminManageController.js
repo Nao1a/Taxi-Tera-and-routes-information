@@ -154,6 +154,7 @@ const banUser = asyncHandler(async (req, res) => {
   const { reason } = req.body || {};
   const user = await User.findById(id);
   if (!user) { res.status(404); throw new Error('User not found'); }
+  if (user.role === 'admin') { res.status(403); throw new Error('Cannot ban an admin user'); }
   user.isSubmissionBanned = true;
   user.submissionBanReason = reason || 'Banned for spamming submissions';
   await user.save();
