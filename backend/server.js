@@ -33,7 +33,6 @@ const corsOptions = {
   credentials: false,
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 
 // Routes
 app.use("/api/users", userRoutes);
