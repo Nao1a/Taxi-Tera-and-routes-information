@@ -23,6 +23,11 @@ async function refreshGraph() {
     }
     return acc;
   }, {});
+  global.graphRevision = (global.graphRevision || 0) + 1;
+  try {
+    const edgeCount = Object.values(global.adjGraph || {}).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
+    console.log(`[Graph] refresh #${global.graphRevision} @ ${new Date().toISOString()} | teras=${teras.length} routes=${routes.length} edges=${edgeCount}`);
+  } catch {}
   return global.adjGraph;
 }
 

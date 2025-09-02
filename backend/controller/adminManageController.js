@@ -109,16 +109,29 @@ const createRoute = asyncHandler(async (req, res) => {
 const updateRoute = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { fare, estimatedTimeMin, distance, roadCondition, availabilityMin } = req.body || {};
+
   const route = await Route.findById(id);
   if (!route) { res.status(404); throw new Error('Route not found'); }
-  if (fare != null) route.fare = fare;
-  if (estimatedTimeMin != null) route.estimatedTimeMin = estimatedTimeMin;
-  if (distance != null) route.distance = distance;
-  if (roadCondition != null) route.roadCondition = roadCondition;
-  if (availabilityMin != null) route.availabilityMin = availabilityMin;
-  await route.save();
+
+  // Build an update object only with provided fields to avoid full-document validation
+  const update = {};
+  if (fare != null && fare !== '') update.fare = Number(fare);
+  if (estimatedTimeMin != null && estimatedTimeMin !== '') update.estimatedTimeMin = Number(estimatedTimeMin);
+  if (distance != null && distance !== '') update.distance = Number(distance);
+  if (roadCondition != null && roadCondition !== '') update.roadCondition = roadCondition;
+  if (availabilityMin != null && availabilityMin !== '') update.availabilityMin = Number(availabilityMin);
+
+  const updated = await Route.findByIdAndUpdate(
+    id,
+    { $set: update },
+    { new: true, runValidators: true, context: 'query' }
+  ).lean();
+
+  try {
+    console.log(`[Admin] Route ${id} updated with`, update);
+  } catch {}
   await refreshGraph();
-  res.json(route);
+  res.json(updated);
 });
 
 const deleteRoute = asyncHandler(async (req, res) => {
@@ -141,6 +154,7 @@ const banUser = asyncHandler(async (req, res) => {
   const { reason } = req.body || {};
   const user = await User.findById(id);
   if (!user) { res.status(404); throw new Error('User not found'); }
+  if (user.role === 'admin') { res.status(403); throw new Error('Cannot ban an admin user'); }
   user.isSubmissionBanned = true;
   user.submissionBanReason = reason || 'Banned for spamming submissions';
   await user.save();
