@@ -3,10 +3,20 @@ const Route = require('../models/RouteModel');
 const { buildAdjacencyList } = require('../utils/graphBuilder');
 const { findShortestPath } = require('../utils/dijkstra');
 
-// Ensure graph initialized
-async function ensureGraph() {
-  if (!global.adjGraph) {
-    await refreshGraph();
+// Ensure graph initialized (with simple lock and staleness check)
+async function ensureGraph({ force = false } = {}) {
+  const STALE_MS = 10 * 60 * 1000; // 10 minutes
+  const now = Date.now();
+  const empty = !global.adjGraph || !Object.keys(global.adjGraph).length;
+  const stale = !global.graphLastBuiltAt || (now - global.graphLastBuiltAt > STALE_MS);
+  if (force || empty || stale) {
+    if (!global.graphBuildingPromise) {
+      global.graphBuildingPromise = (async () => {
+        try { await refreshGraph(); }
+        finally { global.graphBuildingPromise = null; }
+      })();
+    }
+    await global.graphBuildingPromise;
   }
 }
 
@@ -24,6 +34,7 @@ async function refreshGraph() {
     return acc;
   }, {});
   global.graphRevision = (global.graphRevision || 0) + 1;
+  global.graphLastBuiltAt = Date.now();
   try {
     const edgeCount = Object.values(global.adjGraph || {}).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
     console.log(`[Graph] refresh #${global.graphRevision} @ ${new Date().toISOString()} | teras=${teras.length} routes=${routes.length} edges=${edgeCount}`);
@@ -33,8 +44,10 @@ async function refreshGraph() {
 
 async function searchRoute(req, res, next) {
   try {
-    await ensureGraph();
+  await ensureGraph();
     const { from, to, optimizeBy = 'fare' } = req.query;
+  // prevent CDN/browser caching
+  res.set('Cache-Control', 'no-store');
     if (!from || !to) return res.status(400).json({ message: 'from and to query params required' });
   if (!['fare', 'time', 'stops'].includes(optimizeBy)) return res.status(400).json({ message: 'optimizeBy must be fare, time, or stops' });
 
@@ -75,7 +88,8 @@ async function searchRoute(req, res, next) {
 }
 async function listTeras(req, res, next) {
   try {
-    await ensureGraph();
+  await ensureGraph();
+  res.set('Cache-Control', 'no-store');
     const teras = Object.entries(global.teraNameMap).map(([id, name]) => ({ id, name }));
     res.json(teras);
   } catch (e) { next(e); }
