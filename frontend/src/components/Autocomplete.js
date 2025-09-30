@@ -89,12 +89,13 @@ export default function Autocomplete({ options = [], value, onChange, placeholde
         onChange={e => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
-        className={`w-full p-4 rounded-2xl bg-gray-100 border border-gray-300 text-black dark:bg-gray-800 dark:border-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`w-full p-4 rounded-2xl focus:outline-none focus:ring-2 bg-white dark:bg-white/10 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        style={{ border: '1px solid rgb(var(--border))' }}
       />
       {open && (
-        <div className="absolute left-0 right-0 mt-1 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-300 dark:border-gray-700 rounded-xl shadow-2xl max-h-64 overflow-y-auto z-20 animate-fadeIn">
+        <div className="absolute left-0 right-0 mt-1 backdrop-blur-md rounded-xl shadow-2xl max-h-64 overflow-y-auto z-20 animate-fadeIn" style={{ backgroundColor: 'rgb(var(--surface))', border: '1px solid rgb(var(--border))' }}>
           {filtered.length === 0 && (
-            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">No matches</div>
+            <div className="px-4 py-3 text-sm" style={{ color: 'rgb(var(--muted))' }}>No matches</div>
           )}
           {filtered.map((opt, idx) => (
             <button
@@ -102,7 +103,8 @@ export default function Autocomplete({ options = [], value, onChange, placeholde
               key={opt.id || opt.name}
               onMouseDown={e => { e.preventDefault(); commitSelection(idx); }}
               onMouseEnter={() => setHighlight(idx)}
-              className={`w-full text-left px-4 py-2 text-sm transition-colors ${idx === highlight ? 'bg-blue-600 text-white' : 'text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white'}`}
+              className={`w-full text-left px-4 py-2 text-sm transition-colors ${idx === highlight ? 'text-white' : ''}`}
+              style={idx === highlight ? { backgroundColor: 'rgb(var(--brand))' } : {}}
             >
               {highlightName(opt.name)}
             </button>

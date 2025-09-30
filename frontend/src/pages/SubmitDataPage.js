@@ -91,11 +91,11 @@ const SubmitDataPage = () => {
   };
 
   if (!user) {
-    return <div className="p-6 max-w-3xl mx-auto text-black dark:text-white">Please login to submit data.</div>;
+    return <div className="p-6 max-w-3xl mx-auto" style={{ color: 'rgb(var(--text))' }}>Please login to submit data.</div>;
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto text-black dark:text-white">
+    <div className="p-6 max-w-3xl mx-auto" style={{ color: 'rgb(var(--text))' }}>
       <h1 className="text-2xl font-bold mb-4">Contribute Route Data</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <select className={inputBase} value={type} onChange={e=>{setType(e.target.value); setPayload({});}}>
@@ -106,25 +106,25 @@ const SubmitDataPage = () => {
         </select>
         {renderFields()}
         {type === 'newTera' && payload.lng && payload.lat && (
-          <small className="block text-gray-500 dark:text-gray-400">Coordinates will be sent as [lng, lat]</small>
+          <small className="block" style={{ color: 'rgb(var(--muted))' }}>Coordinates will be sent as [lng, lat]</small>
         )}
-        <button type="submit" className="px-4 py-2 bg-black text-white rounded dark:bg-white dark:text-black">Submit</button>
+        <button type="submit" className="px-4 py-2 rounded" style={{ backgroundColor: 'rgb(var(--brand))', color: '#fff' }}>Submit</button>
       </form>
   {/* datalist no longer needed since using Autocomplete component */}
-      {message && <p className="mt-3 text-sm text-black dark:text-white">{message}</p>}
+      {message && <p className="mt-3 text-sm">{message}</p>}
 
       <h2 className="text-xl font-semibold mt-8 mb-2">My Submissions</h2>
     <div className="space-y-2">
         {mySubs.map(s => (
-      <div key={s._id} className="p-3 border rounded flex items-center justify-between bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+      <div key={s._id} className="p-3 border rounded flex items-center justify-between" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
             <div>
               <div className="font-medium">{s.type}</div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">Status: {s.status}</div>
+        <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>Status: {s.status}</div>
             </div>
-            <div className="text-xs text-gray-400">{new Date(s.createdAt).toLocaleString()}</div>
+            <div className="text-xs" style={{ color: 'rgb(var(--muted))' }}>{new Date(s.createdAt).toLocaleString()}</div>
           </div>
         ))}
-    {mySubs.length === 0 && <div className="text-gray-500 dark:text-gray-400">No submissions yet.</div>}
+    {mySubs.length === 0 && <div style={{ color: 'rgb(var(--muted))' }}>No submissions yet.</div>}
       </div>
 
     </div>

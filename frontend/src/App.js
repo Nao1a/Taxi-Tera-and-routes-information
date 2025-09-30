@@ -12,7 +12,7 @@ import AdminSubmissionsPage from './pages/AdminSubmissionsPage';
 function App() {
   return (
     <Router>
-      <div className="bg-white dark:bg-gray-900 min-h-screen text-black dark:text-white">
+      <div className="min-h-screen" style={{ backgroundColor: 'rgb(var(--bg))', color: 'rgb(var(--text))' }}>
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />

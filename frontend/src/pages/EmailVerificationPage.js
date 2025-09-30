@@ -55,29 +55,30 @@ const EmailVerificationPage = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-white dark:bg-black">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-100 dark:bg-gray-900 rounded-2xl shadow-lg text-center">
-        <h1 className="text-2xl font-bold text-black dark:text-white">Verify your email</h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm">{email ? `Email: ${email}` : 'Check your inbox for a code.'}</p>
+    <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: 'rgb(var(--bg))' }}>
+      <div className="w-full max-w-md p-8 space-y-6 rounded-2xl shadow-lg text-center" style={{ backgroundColor: 'rgb(var(--surface))', border: '1px solid rgb(var(--border))' }}>
+        <h1 className="text-2xl font-bold">Verify your email</h1>
+        <p className="text-sm" style={{ color: 'rgb(var(--muted))' }}>{email ? `Email: ${email}` : 'Check your inbox for a code.'}</p>
         <form onSubmit={handleVerify} className="space-y-4">
           <input
             type="text"
             placeholder="6-digit code"
-            className="w-full p-4 rounded-2xl bg-white border border-gray-300 text-black dark:bg-gray-800 dark:border-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest text-center"
+            className="w-full p-4 rounded-2xl focus:outline-none focus:ring-2 tracking-widest text-center bg-white dark:bg-white/10 text-black dark:text-white"
+            style={{ border: '1px solid rgb(var(--border))' }}
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\s+/g,''))}
             maxLength={6}
             required
           />
-          <button disabled={status==='verifying'} className="w-full p-4 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-bold text-lg shadow-lg disabled:opacity-50">
+          <button disabled={status==='verifying'} className="w-full p-4 rounded-2xl font-bold text-lg shadow-lg disabled:opacity-50" style={{ backgroundColor: 'rgb(var(--brand))', color: '#fff' }}>
             {status==='verifying' ? 'Verifying...' : 'Verify'}
           </button>
         </form>
-        <button onClick={handleResend} disabled={status==='resending'} className="mt-2 w-full p-4 rounded-2xl border border-gray-300 text-black dark:border-gray-500 dark:text-white font-semibold text-lg hover:bg-gray-200 dark:hover:bg-gray-800 disabled:opacity-50">
+        <button onClick={handleResend} disabled={status==='resending'} className="mt-2 w-full p-4 rounded-2xl font-semibold text-lg disabled:opacity-50" style={{ border: '1px solid rgb(var(--border))' }}>
           {status==='resending' ? 'Resending...' : 'Resend verification email'}
         </button>
-        {message && <p className={`text-sm ${status==='error' ? 'text-red-500 dark:text-red-400':'text-green-500 dark:text-green-400'}`}>{message}</p>}
-        {token && <p className="text-[10px] break-all text-gray-500">Token cached client-side.</p>}
+        {message && <p className="text-sm" style={{ color: status==='error' ? '#dc2626' : '#16a34a' }}>{message}</p>}
+        {token && <p className="text-[10px] break-all" style={{ color: 'rgb(var(--muted))' }}>Token cached client-side.</p>}
       </div>
     </div>
   );

@@ -53,10 +53,10 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-black">
+    <div className="flex flex-col items-center justify-center min-h-screen" style={{ backgroundColor: 'rgb(var(--bg))', color: 'rgb(var(--text))' }}>
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-black dark:text-white">TERAS</h1>
-        <p className="text-gray-600 dark:text-gray-400">Taxi Routes & Fare Explorer</p>
+        <h1 className="text-3xl font-bold">TERAS</h1>
+        <p style={{ color: 'rgb(var(--muted))' }}>Taxi Routes & Fare Explorer</p>
       </div>
       <div className="mt-8 w-full max-w-md px-4">
         <div className="flex flex-col space-y-4">
@@ -89,18 +89,15 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-        <button
-          onClick={handleSearch}
-          className="mt-8 w-full p-4 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-bold text-lg shadow-lg"
-        >
+        <button onClick={handleSearch} className="mt-8 w-full p-4 rounded-2xl font-bold text-lg shadow-lg" style={{ backgroundColor: 'rgb(var(--brand))', color: '#fff' }}>
           Continue
         </button>
-        <button onClick={() => navigate('/submit')} className="mt-4 w-full p-4 rounded-2xl border border-gray-300 text-black dark:border-gray-500 dark:text-white font-semibold text-lg">
+        <button onClick={() => navigate('/submit')} className="mt-4 w-full p-4 rounded-2xl font-semibold text-lg" style={{ border: '1px solid rgb(var(--border))' }}>
           Contribute Route Data
         </button>
 
         <div className="mt-8 w-full">
-          {error && <p className="text-red-500 text-center">{error}</p>}
+          {error && <p className="text-center" style={{ color: '#dc2626' }}>{error}</p>}
           {results && (
             <div>
               <RouteDetails route={results} title="Best Route" />

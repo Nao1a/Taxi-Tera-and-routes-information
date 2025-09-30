@@ -2,18 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root {
+  /* Light mode neutrals */
+  --bg: 245 246 250;      /* slate-50 with a hint of blue */
+  --surface: 255 255 255; /* white */
+  --text: 17 24 39;       /* gray-900 */
+  --muted: 107 114 128;   /* gray-500 */
+  --border: 229 231 235;  /* gray-200 */
+  --brand: 79 70 229;     /* brand-600 */
+}
+
+.dark:root {
+  /* Dark mode neutrals */
+  --bg: 13 17 23;         /* near black but not pure */
+  --surface: 22 27 34;    /* dark surface */
+  --text: 236 236 241;    /* off white */
+  --muted: 160 174 192;   /* slate-400 */
+  --border: 48 54 61;     /* dark border */
+  --brand: 99 102 241;    /* brand-500 for dark */
 }
 
 html, body, #root {
-  background: #000; /* ensure no white flash on scroll */
   min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: rgb(var(--bg));
+  color: rgb(var(--text));
 }
 
 code {
