@@ -88,10 +88,10 @@ async function searchRoute(req, res, next) {
 }
 async function listTeras(req, res, next) {
   try {
-  await ensureGraph();
-  res.set('Cache-Control', 'no-store');
-    const teras = Object.entries(global.teraNameMap).map(([id, name]) => ({ id, name }));
-    res.json(teras);
+    // Serve directly from DB so suggestions don't depend on in-memory cache
+    res.set('Cache-Control', 'no-store');
+    const teras = await TaxiTera.find({}).select('_id name').lean();
+    res.json(teras.map(t => ({ id: t._id.toString(), name: t.name })));
   } catch (e) { next(e); }
 }
 
