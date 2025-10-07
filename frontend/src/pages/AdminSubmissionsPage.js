@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { adminListSubmissions, approveSubmission, rejectSubmission, adminManage } from '../services/submissionService';
 import authService from '../services/authService';
 import Autocomplete from '../components/Autocomplete';
+import PointMap from '../components/map/PointMap';
+import LocationPicker from '../components/map/LocationPicker';
 
 const AdminSubmissionsPage = () => {
   const user = authService.getCurrentUser();
@@ -120,6 +122,7 @@ const AdminSubmissionsPage = () => {
               <div className="text-xs text-gray-400">by {it.submittedBy?.username || 'unknown'} on {new Date(it.createdAt).toLocaleString()}</div>
             </div>
             <pre className="bg-gray-50 dark:bg-gray-900 text-xs p-2 mt-2 overflow-auto max-h-40">{JSON.stringify(it.payload, null, 2)}</pre>
+            {renderSubmissionMap(it)}
             {it.status === 'pending' && (
               <div className="flex gap-2 mt-3">
                 <button onClick={()=>onApprove(it._id)} className="px-3 py-1 bg-green-600 text-white rounded">Approve</button>
@@ -258,18 +261,28 @@ function TeraForm({ tera, onSubmit, busy }) {
   const [notes, setNotes] = useState(tera?.notes || '');
   const [condition, setCondition] = useState(tera?.condition || 'good');
   return (
-    <form className="grid md:grid-cols-6 gap-2 items-end" onSubmit={e=>{e.preventDefault(); onSubmit({ name, lng, lat, address, notes, condition });}}>
-      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Name" value={name} onChange={e=>setName(e.target.value)} />
-      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Lng" value={lng} onChange={e=>setLng(e.target.value)} />
-      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Lat" value={lat} onChange={e=>setLat(e.target.value)} />
-      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Address" value={address} onChange={e=>setAddress(e.target.value)} />
-      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Notes" value={notes} onChange={e=>setNotes(e.target.value)} />
-      <select disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" value={condition} onChange={e=>setCondition(e.target.value)}>
-        <option value="good">good</option>
-        <option value="average">average</option>
-        <option value="poor">poor</option>
-      </select>
-      <button disabled={busy} className="p-2 bg-blue-600 text-white rounded md:col-span-6 disabled:opacity-50 flex items-center justify-center gap-2">
+    <form className="grid gap-2 items-end" onSubmit={e=>{e.preventDefault(); onSubmit({ name, lng, lat, address, notes, condition });}}>
+      <div className="grid md:grid-cols-6 gap-2">
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Name" value={name} onChange={e=>setName(e.target.value)} />
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Lng" value={lng} onChange={e=>setLng(e.target.value)} />
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Lat" value={lat} onChange={e=>setLat(e.target.value)} />
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Address" value={address} onChange={e=>setAddress(e.target.value)} />
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Notes" value={notes} onChange={e=>setNotes(e.target.value)} />
+        <select disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" value={condition} onChange={e=>setCondition(e.target.value)}>
+          <option value="good">good</option>
+          <option value="average">average</option>
+          <option value="poor">poor</option>
+        </select>
+      </div>
+      <div className="mt-2">
+        <LocationPicker
+          value={(lat && lng) ? { lat: Number(lat), lng: Number(lng) } : null}
+          onChange={({ lat: la, lng: ln }) => { setLat(String(la)); setLng(String(ln)); }}
+          height={240}
+          disabled={busy}
+        />
+      </div>
+      <button disabled={busy} className="p-2 bg-blue-600 text-white rounded disabled:opacity-50 flex items-center justify-center gap-2">
         {busy && <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>}
         Save
       </button>
@@ -325,5 +338,23 @@ function RouteForm({ route, onSubmit, busy }) {
         Save
       </button>
     </form>
+  );
+}
+
+// helper to render a map preview inside the submission card when payload contains lat/lng
+function renderSubmissionMap(it) {
+  const p = it?.payload || {};
+  // support either payload.lat/payload.lng or payload.location.coordinates [lng,lat]
+  let lat = null, lng = null;
+  if (typeof p.lat !== 'undefined' && typeof p.lng !== 'undefined') {
+    lat = Number(p.lat); lng = Number(p.lng);
+  } else if (Array.isArray(p?.location?.coordinates) && p.location.coordinates.length === 2) {
+    lng = Number(p.location.coordinates[0]); lat = Number(p.location.coordinates[1]);
+  }
+  if (lat == null || lng == null || Number.isNaN(lat) || Number.isNaN(lng)) return null;
+  return (
+    <div className="mt-2">
+      <PointMap coords={{ lat, lng }} height={220} />
+    </div>
   );
 }

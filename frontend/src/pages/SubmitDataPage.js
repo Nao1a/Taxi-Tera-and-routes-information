@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createSubmission, getMySubmissions } from '../services/submissionService';
 import authService from '../services/authService';
 import Autocomplete from '../components/Autocomplete';
+import LocationPicker from '../components/map/LocationPicker';
 
 const SubmitDataPage = () => {
   const user = authService.getCurrentUser();
@@ -46,8 +47,15 @@ const SubmitDataPage = () => {
         return (
           <div className="space-y-3">
             <input className={inputBase} placeholder="Tera name" onChange={e=>onChangePayload('name', e.target.value)} />
-            <input className={inputBase} placeholder="Longitude" onChange={e=>onChangePayload('lng', e.target.value)} />
-            <input className={inputBase} placeholder="Latitude" onChange={e=>onChangePayload('lat', e.target.value)} />
+            <LocationPicker
+              value={payload.lat && payload.lng ? { lat: Number(payload.lat), lng: Number(payload.lng) } : null}
+              onChange={({ lat, lng }) => { onChangePayload('lat', lat); onChangePayload('lng', lng); }}
+              height={320}
+            />
+            <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <div className="p-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">Lat: {payload.lat ?? '-'}</div>
+              <div className="p-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">Lng: {payload.lng ?? '-'}</div>
+            </div>
             <input className={inputBase} placeholder="Address (optional)" onChange={e=>onChangePayload('address', e.target.value)} />
             <select className={inputBase} onChange={e=>onChangePayload('condition', e.target.value)} defaultValue="good">
               <option value="good">Good</option>
