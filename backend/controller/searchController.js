@@ -95,4 +95,58 @@ async function listTeras(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { searchRoute, refreshGraph, listTeras };
+async function getTeraDetails(req, res, next) {
+  try {
+    await ensureGraph();
+    res.set('Cache-Control', 'no-store');
+    
+    const { tera } = req.query;
+    if (!tera) return res.status(400).json({ message: 'tera query param required' });
+
+    // Accept either ObjectId string or tera name
+    const nameToId = Object.fromEntries(Object.entries(global.teraNameMap).map(([id, name]) => [name.toLowerCase(), id]));
+    const teraId = global.adjGraph[tera] ? tera : nameToId[tera.toLowerCase()];
+    
+    if (!teraId) return res.status(404).json({ message: 'Tera not found' });
+
+    // Get tera info from database
+    const teraDoc = await TaxiTera.findById(teraId).lean();
+    if (!teraDoc) return res.status(404).json({ message: 'Tera not found in database' });
+
+    // Get direct destinations from adjacency graph
+    const directRoutes = global.adjGraph[teraId] || [];
+    
+    // Map destinations with names and coordinates
+    const destinations = directRoutes.map(edge => ({
+      id: edge.to,
+      name: global.teraNameMap[edge.to] || edge.to,
+      coordinates: global.teraCoordMap?.[edge.to] || null,
+      fare: edge.fare,
+      estimatedTimeMin: edge.time
+    }));
+
+    // Prepare tera coordinates (convert from GeoJSON [lng, lat] to [lat, lng])
+    const coords = Array.isArray(teraDoc.location?.coordinates) && teraDoc.location.coordinates.length === 2
+      ? [teraDoc.location.coordinates[1], teraDoc.location.coordinates[0]]
+      : null;
+
+    const response = {
+      tera: {
+        id: teraDoc._id.toString(),
+        name: teraDoc.name,
+        coordinates: coords,
+        address: teraDoc.address,
+        condition: teraDoc.condition,
+        notes: teraDoc.notes
+      },
+      directDestinations: destinations,
+      totalDestinations: destinations.length
+    };
+
+    res.json(response);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { searchRoute, refreshGraph, listTeras, getTeraDetails };

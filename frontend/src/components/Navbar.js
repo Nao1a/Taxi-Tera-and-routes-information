@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 
@@ -7,6 +7,7 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const navigate = useNavigate();
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handler = () => {
@@ -17,6 +18,23 @@ const Navbar = () => {
     handler(); // initial load
     return () => window.removeEventListener('auth-changed', handler);
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -30,7 +48,12 @@ const Navbar = () => {
   const handleLogout = () => {
     authService.logout();
     setCurrentUser(undefined);
+    setDropdownOpen(false);
     navigate('/');
+  };
+
+  const handleDeleteAccount = () => {
+    setDropdownOpen(false);
   };
 
   const toggleTheme = () => {
@@ -61,24 +84,24 @@ const Navbar = () => {
             </svg>
           )}
         </button>
-  <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           {currentUser ? (
             <div>
               <button onClick={() => setDropdownOpen(!dropdownOpen)} className="focus:outline-none">
-    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ backgroundColor: 'rgb(var(--bg))', color: 'rgb(var(--text))', border: '1px solid rgb(var(--border))' }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ backgroundColor: 'rgb(var(--bg))', color: 'rgb(var(--text))', border: '1px solid rgb(var(--border))' }}>
                   {(currentUser?.username?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
                 </div>
               </button>
               {dropdownOpen && (
-    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1" style={{ backgroundColor: 'rgb(var(--surface))', color: 'rgb(var(--text))', border: '1px solid rgb(var(--border))' }}>
-      <Link to="/delete-account" className="block px-4 py-2 text-sm hover:opacity-80">Delete Account</Link>
-      <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm hover:opacity-80">Logout</button>
+                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-50" style={{ backgroundColor: 'rgb(var(--surface))', color: 'rgb(var(--text))', border: '1px solid rgb(var(--border))' }}>
+                  <Link to="/delete-account" onClick={handleDeleteAccount} className="block px-4 py-2 text-sm hover:opacity-80">Delete Account</Link>
+                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm hover:opacity-80">Logout</button>
                 </div>
               )}
             </div>
           ) : (
             <Link to="/login">
-        <div className="w-10 h-10 rounded-full" style={{ border: '2px solid rgb(var(--border))' }}></div>
+              <div className="w-10 h-10 rounded-full" style={{ border: '2px solid rgb(var(--border))' }}></div>
             </Link>
           )}
         </div>
