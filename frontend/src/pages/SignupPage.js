@@ -6,6 +6,7 @@ const SignupPage = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -70,14 +71,24 @@ const SignupPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full p-4 rounded-2xl focus:outline-none focus:ring-2 bg-white dark:bg-white/10 text-black dark:text-white"
-            style={{ border: '1px solid rgb(var(--border))' }}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              className="w-full p-4 rounded-2xl focus:outline-none focus:ring-2 bg-white dark:bg-white/10 text-black dark:text-white"
+              style={{ border: '1px solid rgb(var(--border))' }}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 px-4"
+              style={{ color: 'rgb(var(--muted))' }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
           <button disabled={loading} className="w-full p-4 rounded-2xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" style={{ backgroundColor: 'rgb(var(--brand))', color: '#fff' }}>
             {loading ? 'Creating account...' : 'Sign up'}
           </button>

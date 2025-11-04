@@ -72,11 +72,6 @@ const LoginPage = () => {
               {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
-          <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-blue-500 hover:underline">
-              Forgot password?
-            </Link>
-          </div>
           <button className="w-full p-4 rounded-2xl font-bold text-lg shadow-lg" style={{ backgroundColor: 'rgb(var(--brand))', color: '#fff' }}>
             Log in
           </button>

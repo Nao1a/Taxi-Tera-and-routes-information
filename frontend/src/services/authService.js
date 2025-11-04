@@ -7,6 +7,9 @@ const signup = (username, email, password) => {
     username,
     email,
     password,
+  }).catch((err) => {
+    // Standardize error format like login
+    throw err.response ? err.response : err;
   });
 };
 

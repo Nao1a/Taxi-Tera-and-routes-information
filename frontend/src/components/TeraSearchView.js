@@ -182,3 +182,6 @@ const TeraSearchView = ({ teraData }) => {
 
 export default TeraSearchView;
 
+
+
+
