@@ -171,8 +171,106 @@ const unbanUser = asyncHandler(async (req, res) => {
   res.json({ message: 'User unbanned from submissions' });
 });
 
+// Analytics endpoint
+const getAnalytics = asyncHandler(async (req, res) => {
+  const UserSubmission = require('../models/UserSubmissionModel');
+  
+  // Get all data
+  const users = await User.find({}).select('role isSubmissionBanned createdAt').lean();
+  const teras = await TaxiTera.find({}).select('condition createdAt').lean();
+  const routes = await Route.find({}).select('roadCondition fare distance createdAt').lean();
+  const submissions = await UserSubmission.find({}).select('status type createdAt submittedBy').lean();
+
+  // Calculate statistics
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  // User stats
+  const usersByRole = users.reduce((acc, u) => {
+    acc[u.role] = (acc[u.role] || 0) + 1;
+    return acc;
+  }, {});
+  const bannedUsers = users.filter(u => u.isSubmissionBanned).length;
+  const newUsersThisMonth = users.filter(u => new Date(u.createdAt) >= thirtyDaysAgo).length;
+  const newUsersThisWeek = users.filter(u => new Date(u.createdAt) >= sevenDaysAgo).length;
+
+  // Tera stats
+  const terasByCondition = teras.reduce((acc, t) => {
+    acc[t.condition] = (acc[t.condition] || 0) + 1;
+    return acc;
+  }, {});
+  const newTerasThisMonth = teras.filter(t => new Date(t.createdAt) >= thirtyDaysAgo).length;
+
+  // Route stats
+  const routesByCondition = routes.reduce((acc, r) => {
+    acc[r.roadCondition] = (acc[r.roadCondition] || 0) + 1;
+    return acc;
+  }, {});
+  const totalFareSum = routes.reduce((sum, r) => sum + (r.fare || 0), 0);
+  const avgFare = routes.length ? (totalFareSum / routes.length).toFixed(2) : 0;
+  const totalDistance = routes.reduce((sum, r) => sum + (r.distance || 0), 0);
+  const newRoutesThisMonth = routes.filter(r => new Date(r.createdAt) >= thirtyDaysAgo).length;
+
+  // Submission stats
+  const submissionsByStatus = submissions.reduce((acc, s) => {
+    acc[s.status] = (acc[s.status] || 0) + 1;
+    return acc;
+  }, {});
+  const submissionsByType = submissions.reduce((acc, s) => {
+    acc[s.type] = (acc[s.type] || 0) + 1;
+    return acc;
+  }, {});
+  const pendingSubmissions = submissions.filter(s => s.status === 'pending').length;
+  const approvalRate = submissions.length ? 
+    ((submissions.filter(s => s.status === 'approved').length / submissions.length) * 100).toFixed(1) : 0;
+  const newSubmissionsThisWeek = submissions.filter(s => new Date(s.createdAt) >= sevenDaysAgo).length;
+
+  // Recent activity (last 10 submissions)
+  const recentSubmissions = await UserSubmission.find({})
+    .populate('submittedBy', 'username')
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .select('type status createdAt submittedBy')
+    .lean();
+
+  res.json({
+    totals: {
+      users: users.length,
+      teras: teras.length,
+      routes: routes.length,
+      submissions: submissions.length
+    },
+    users: {
+      byRole: usersByRole,
+      banned: bannedUsers,
+      newThisMonth: newUsersThisMonth,
+      newThisWeek: newUsersThisWeek
+    },
+    teras: {
+      byCondition: terasByCondition,
+      newThisMonth: newTerasThisMonth
+    },
+    routes: {
+      byCondition: routesByCondition,
+      avgFare,
+      totalDistance,
+      newThisMonth: newRoutesThisMonth
+    },
+    submissions: {
+      byStatus: submissionsByStatus,
+      byType: submissionsByType,
+      pending: pendingSubmissions,
+      approvalRate,
+      newThisWeek: newSubmissionsThisWeek
+    },
+    recentActivity: recentSubmissions
+  });
+});
+
 module.exports = {
   listTeras, createTera, updateTera, deleteTera,
   listRoutes, createRoute, updateRoute, deleteRoute,
-  listUsers, banUser, unbanUser
+  listUsers, banUser, unbanUser,
+  getAnalytics
 };

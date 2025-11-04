@@ -48,4 +48,6 @@ export const adminManage = {
   listUsers: async () => (await api.get('/api/admin/manage/users', { headers: authHeaders() })).data,
   banUser: async (id, reason) => (await api.post(`/api/admin/manage/users/${id}/ban`, { reason }, { headers: authHeaders() })).data,
   unbanUser: async (id) => (await api.post(`/api/admin/manage/users/${id}/unban`, {}, { headers: authHeaders() })).data,
+  // Analytics
+  getAnalytics: async () => (await api.get('/api/admin/analytics', { headers: authHeaders() })).data,
 };

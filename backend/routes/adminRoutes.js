@@ -28,4 +28,7 @@ router.get('/manage/users', isAuth, isAdmin, manage.listUsers);
 router.post('/manage/users/:id/ban', isAuth, isAdmin, manage.banUser);
 router.post('/manage/users/:id/unban', isAuth, isAdmin, manage.unbanUser);
 
+// Analytics
+router.get('/analytics', isAuth, isAdmin, manage.getAnalytics);
+
 module.exports = router;
