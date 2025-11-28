@@ -9,6 +9,10 @@ const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState('user');
+  const [licenseText, setLicenseText] = useState('');
+  const [carPlate, setCarPlate] = useState('');
+  const [carType, setCarType] = useState('');
   const navigate = useNavigate();
 
   const handleSignup = (e) => {
@@ -31,7 +35,7 @@ const SignupPage = () => {
       return;
     }
     setLoading(true);
-    authService.signup(u, em, pw)
+    authService.signup(u, em, pw, role, licenseText.trim(), carPlate.trim(), carType.trim())
       .then((res) => {
         const token = res.data?.verifyToken;
         const qp = new URLSearchParams();
@@ -41,9 +45,8 @@ const SignupPage = () => {
         navigate(`/verify-email?${qp.toString()}`);
       })
       .catch((error) => {
-        // Axios error shape
-        const serverMsg = error?.response?.data?.message;
-        setErrorMsg(serverMsg || 'Signup failed');
+        const serverMsg = error?.response?.data?.message || error?.data?.message || error?.message;
+        setErrorMsg(serverMsg || 'Signup failed. Please check your connection and try again.');
       })
       .finally(() => setLoading(false));
   };
@@ -89,6 +92,46 @@ const SignupPage = () => {
               {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isDriver"
+              checked={role === 'taxiDriver'}
+              onChange={(e) => setRole(e.target.checked ? 'taxiDriver' : 'user')}
+              className="w-4 h-4"
+            />
+            <label htmlFor="isDriver" className="text-sm" style={{ color: 'rgb(var(--text))' }}>
+              Register as Driver
+            </label>
+          </div>
+          {role === 'taxiDriver' && (
+            <div className="space-y-4 p-4 rounded-2xl" style={{ backgroundColor: 'rgb(var(--bg))', border: '1px solid rgb(var(--border))' }}>
+              <input
+                type="text"
+                placeholder="License Number"
+                className="w-full p-4 rounded-2xl focus:outline-none focus:ring-2 bg-white dark:bg-white/10 text-black dark:text-white"
+                style={{ border: '1px solid rgb(var(--border))' }}
+                value={licenseText}
+                onChange={(e) => setLicenseText(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Car Plate Number"
+                className="w-full p-4 rounded-2xl focus:outline-none focus:ring-2 bg-white dark:bg-white/10 text-black dark:text-white"
+                style={{ border: '1px solid rgb(var(--border))' }}
+                value={carPlate}
+                onChange={(e) => setCarPlate(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Car Type (e.g., Sedan, SUV)"
+                className="w-full p-4 rounded-2xl focus:outline-none focus:ring-2 bg-white dark:bg-white/10 text-black dark:text-white"
+                style={{ border: '1px solid rgb(var(--border))' }}
+                value={carType}
+                onChange={(e) => setCarType(e.target.value)}
+              />
+            </div>
+          )}
           <button disabled={loading} className="w-full p-4 rounded-2xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" style={{ backgroundColor: 'rgb(var(--brand))', color: '#fff' }}>
             {loading ? 'Creating account...' : 'Sign up'}
           </button>

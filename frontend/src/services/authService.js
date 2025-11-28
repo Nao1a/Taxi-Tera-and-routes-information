@@ -2,14 +2,17 @@ import api from './apiClient';
 
 const API_URL = '/api/users/';
 
-const signup = (username, email, password) => {
+const signup = (username, email, password, role = 'user', licenseText = '', carPlate = '', carType = '') => {
   return api.post(API_URL + 'signup', {
     username,
     email,
     password,
+    role,
+    licenseText,
+    carPlate,
+    carType,
   }).catch((err) => {
-    // Standardize error format like login
-    throw err.response ? err.response : err;
+    throw err;
   });
 };
 

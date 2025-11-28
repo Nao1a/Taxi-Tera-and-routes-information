@@ -1,8 +1,9 @@
-// Centralized Axios instance pointing to the deployed backend on Render
+// Centralized Axios instance - uses localhost in development, can be overridden with env variable
 import axios from 'axios';
+import { API_BASE_URL } from '../config/apiConfig';
 
 const api = axios.create({
-  baseURL: 'https://teras-7d3o.onrender.com',
+  baseURL: API_BASE_URL,
 });
 
 export default api;

@@ -7,6 +7,7 @@ const searchRoutes = require('./routes/searchRoutes');
 const errorHandler = require('./middleware/ErrorHandler');
 const submissionRoutes = require('./routes/submissionRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const driverRoutes = require('./routes/driverRoutes');
 const { refreshGraph } = require('./controller/searchController');
 dotenv.config({ path: require('path').join(__dirname, '.env') });
 
@@ -40,6 +41,7 @@ app.use("/api/users", userRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/driver', driverRoutes);
 
 // Optional admin refresh endpoint (could protect with auth middleware)
 app.post('/api/_admin/refresh-graph', async (req, res, next) => {

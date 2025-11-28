@@ -17,7 +17,8 @@ const createSubmission = asyncHandler(async (req, res) => {
     throw new Error('type and payload are required');
   }
 
-  if (!['newTera', 'newRoute', 'fareUpdate', 'conditionUpdate'].includes(type)) {
+  const validTypes = ['newTera', 'newRoute', 'fareUpdate', 'conditionUpdate', 'driver_verification', 'route_application'];
+  if (!validTypes.includes(type)) {
     res.status(400);
     throw new Error('Invalid submission type');
   }

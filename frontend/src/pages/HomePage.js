@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import RouteDetails from '../components/RouteDetails';
 import Autocomplete from '../components/Autocomplete';
 import TeraSearchView from '../components/TeraSearchView';
+import authService from '../services/authService';
+import { API_BASE_URL } from '../config/apiConfig';
 
 const HomePage = () => {
   const [teras, setTeras] = useState([]);
@@ -18,11 +20,19 @@ const HomePage = () => {
   const [selectedTera, setSelectedTera] = useState('');
   const [teraDetails, setTeraDetails] = useState(null);
 
+  // Redirect taxi drivers to driver dashboard
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    if (user?.role === 'taxiDriver') {
+      navigate('/driver-dashboard');
+    }
+  }, [navigate]);
+
   useEffect(() => {
     const fetchTeras = async () => {
       try {
   // Backend mounts teras route at /api/search/teras (searchRoutes mounted at /api/search)
-  const response = await fetch('https://teras-7d3o.onrender.com/api/search/teras');
+  const response = await fetch(`${API_BASE_URL}/api/search/teras`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -45,7 +55,7 @@ const HomePage = () => {
     setResults(null);
     try {
       const params = new URLSearchParams({ from, to, optimizeBy });
-  const response = await fetch(`https://teras-7d3o.onrender.com/api/search?${params}`);
+  const response = await fetch(`${API_BASE_URL}/api/search?${params}`);
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.message || 'Search failed');
@@ -67,7 +77,7 @@ const HomePage = () => {
     setTeraDetails(null);
     try {
       const params = new URLSearchParams({ tera: selectedTera });
-      const response = await fetch(`https://teras-7d3o.onrender.com/api/search/tera-details?${params}`);
+      const response = await fetch(`${API_BASE_URL}/api/search/tera-details?${params}`);
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.message || 'Tera search failed');

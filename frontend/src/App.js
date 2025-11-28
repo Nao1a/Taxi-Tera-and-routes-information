@@ -8,6 +8,7 @@ import EmailVerificationPage from './pages/EmailVerificationPage';
 import DeleteAccountPage from './pages/DeleteAccountPage';
 import SubmitDataPage from './pages/SubmitDataPage';
 import AdminSubmissionsPage from './pages/AdminSubmissionsPage';
+import DriverDashboard from './pages/DriverDashboard';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/delete-account" element={<DeleteAccountPage />} />
           <Route path="/submit" element={<SubmitDataPage />} />
           <Route path="/admin/submissions" element={<AdminSubmissionsPage />} />
+          <Route path="/driver-dashboard" element={<DriverDashboard />} />
         </Routes>
       </div>
     </Router>

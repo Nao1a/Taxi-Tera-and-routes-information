@@ -8,7 +8,7 @@ const transporter = require('../config/mailer');
 
 
 const SignupUser = asyncHandler(async (req, res) => {
-    const {username , email , password } = req.body;
+    const {username , email , password, role, licenseText, carPlate, carType } = req.body;
     if(!username || !email || !password) {
         res.status(400);
         throw new Error("Please fill in all fields");
@@ -30,22 +30,48 @@ const SignupUser = asyncHandler(async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Normalize role - handle string comparison
+    const normalizedRole = String(role || '').trim();
+    const isTaxiDriver = normalizedRole === 'taxiDriver';
 
-
-    const newUser = await User.create({
+    // Prepare user data - always set role explicitly
+    const userData = {
         username,
         email,
         password: hashedPassword,
-        isVerified: false
-    });
-    console.log("user created" , newUser);
+        isVerified: false,
+        role: isTaxiDriver ? 'taxiDriver' : 'user'
+    };
+
+    // If role is 'taxiDriver', set driver details
+    if (isTaxiDriver) {
+        userData.driverDetails = {
+            licenseText: licenseText || '',
+            carPlate: carPlate || '',
+            carType: carType || '',
+            verificationStatus: 'unverified',
+            documents: {
+                licensePhoto: '',
+                carPhoto: ''
+            }
+        };
+    }
+
+    let newUser;
+    try {
+        newUser = await User.create(userData);
+    } catch (createError) {
+        res.status(400);
+        throw new Error(createError.message || "Failed to create user account");
+    }
+    // console.log("user created" , newUser);
     // Send verification email
     try {
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
         const verificationToken = jwt.sign({ email: newUser.email, code: verificationCode }, process.env.JWT_SECRET, { expiresIn: '10m' });
         const frontendBase = process.env.FRONTEND_BASE_URL || `${req.protocol}://${req.get('host').replace(/\/$/, '')}`;
         const verifyUrl = `${frontendBase}/verify-email?token=${verificationToken}&code=${verificationCode}`;
-        console.log(`verification token: ${verificationToken}`);
+        // console.log(`verification token: ${verificationToken}`);
         await transporter.sendMail({
             from: process.env.EMAIL_FROM || 'no-reply@example.com',
             to: newUser.email,
@@ -56,6 +82,7 @@ const SignupUser = asyncHandler(async (req, res) => {
             id: newUser._id,
             username: newUser.username,
             email: newUser.email,
+            role: newUser.role,
             message: 'Signup successful, verification email sent',
             verifyToken: verificationToken
         });
@@ -65,6 +92,7 @@ const SignupUser = asyncHandler(async (req, res) => {
             id: newUser._id,
             username: newUser.username,
             email: newUser.email,
+            role: newUser.role,
             message: 'Signup successful but failed to send verification email'
         });
     }

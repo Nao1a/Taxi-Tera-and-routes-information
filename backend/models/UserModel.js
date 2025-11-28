@@ -7,12 +7,29 @@ const UserSchema = new mongoose.Schema({
     isVerified: { type: Boolean, default: false },
     role: {
         type : String,
-        enum : ['user', 'moderator', 'admin' , 'taxiOwner'],
+        enum : ['user', 'moderator', 'admin', 'taxiDriver'],
         default : 'user'
     },
     reputation : {type : Number, default : 5},
     isSubmissionBanned: { type: Boolean, default: false },
-    submissionBanReason: { type: String }
+    submissionBanReason: { type: String },
+    // Driver-specific fields
+    driverDetails: {
+        licenseText: { type: String },
+        carPlate: { type: String },
+        carType: { type: String },
+        verificationStatus: {
+            type: String,
+            enum: ['unverified', 'pending', 'verified', 'rejected'],
+            default: 'unverified'
+        },
+        documents: {
+            licensePhoto: { type: String }, // Cloudinary URL
+            carPhoto: { type: String } // Cloudinary URL
+        },
+        currentRoute: { type: mongoose.Schema.Types.ObjectId, ref: 'Route' },
+        routeAssignedDate: { type: Date }
+    }
 }, { timestamps : true })
 
 module.exports = mongoose.model('User', UserSchema)

@@ -3,6 +3,7 @@ import { createSubmission, getMySubmissions } from '../services/submissionServic
 import authService from '../services/authService';
 import Autocomplete from '../components/Autocomplete';
 import LocationPicker from '../components/map/LocationPicker';
+import { API_BASE_URL } from '../config/apiConfig';
 
 const SubmitDataPage = () => {
   const user = authService.getCurrentUser();
@@ -20,7 +21,7 @@ const SubmitDataPage = () => {
 
   useEffect(() => {
     // Fetch tera names for suggestions
-  fetch('https://teras-7d3o.onrender.com/api/search/teras')
+  fetch(`${API_BASE_URL}/api/search/teras`)
       .then(r => r.ok ? r.json() : [])
       .then(list => setTeraOptions(Array.isArray(list) ? list : []))
       .catch(() => setTeraOptions([]));

@@ -159,6 +159,22 @@ const Navbar = () => {
                       Submit Route Data
                     </Link>
 
+                    {/* Driver Dashboard - Only show for taxi drivers */}
+                    {currentUser?.role === 'taxiDriver' && (
+                      <Link 
+                        to="/driver-dashboard" 
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center px-4 py-2.5 text-sm transition-colors"
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(var(--brand-rgb), 0.1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Driver Dashboard
+                      </Link>
+                    )}
+
                     {/* Admin Panel - Only show for admin/moderator */}
                     {(currentUser?.role === 'admin' || currentUser?.role === 'moderator') && (
                       <Link 

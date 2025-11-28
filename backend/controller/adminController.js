@@ -2,6 +2,8 @@ const asyncHandler = require('express-async-handler');
 const UserSubmission = require('../models/UserSubmissionModel');
 const TaxiTera = require('../models/TaxiTeraModels');
 const Route = require('../models/RouteModel');
+const User = require('../models/UserModel');
+const mongoose = require('mongoose');
 const { refreshGraph } = require('./searchController');
 
 // GET /api/admin/submissions?status=pending|approved|rejected
@@ -15,6 +17,39 @@ const getAllSubmissions = asyncHandler(async (req, res) => {
     .populate('submittedBy', 'username email role')
     .sort({ createdAt: -1 })
     .lean();
+  
+  // Populate route details for route_application submissions
+  for (const item of items) {
+    if (item.type === 'route_application' && item.payload?.targetRouteId) {
+      const route = await Route.findById(item.payload.targetRouteId)
+        .populate('fromTera', 'name')
+        .populate('toTera', 'name')
+        .select('fromTera toTera fare activeDriverCount')
+        .lean();
+      if (route) {
+        item.payload.targetRoute = {
+          _id: route._id,
+          name: `${route.fromTera.name} → ${route.toTera.name}`,
+          fare: route.fare,
+          activeDriverCount: route.activeDriverCount || 0
+        };
+      }
+      if (item.payload?.currentRouteId) {
+        const currentRoute = await Route.findById(item.payload.currentRouteId)
+          .populate('fromTera', 'name')
+          .populate('toTera', 'name')
+          .select('fromTera toTera')
+          .lean();
+        if (currentRoute) {
+          item.payload.currentRoute = {
+            _id: currentRoute._id,
+            name: `${currentRoute.fromTera.name} → ${currentRoute.toTera.name}`
+          };
+        }
+      }
+    }
+  }
+  
   res.json(items);
 });
 
@@ -194,6 +229,103 @@ const approveSubmission = asyncHandler(async (req, res) => {
       await sub.save();
       await refreshGraph();
       return res.json({ message: 'Submission approved. Tera condition updated.', tera, submission: sub });
+    }
+    case 'driver_verification': {
+      // Expected: { licensePhoto, carPhoto, licenseText, carPlate, carType }
+      const user = await User.findById(sub.submittedBy);
+      if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+      }
+      if (user.role !== 'taxiDriver') {
+        res.status(400);
+        throw new Error('User is not a taxi driver');
+      }
+      // Update user verification status
+      user.driverDetails.verificationStatus = 'verified';
+      if (payload.licensePhoto) user.driverDetails.documents.licensePhoto = payload.licensePhoto;
+      if (payload.carPhoto) user.driverDetails.documents.carPhoto = payload.carPhoto;
+      await user.save();
+      sub.adminNotes = adminNotes || sub.adminNotes;
+      sub.status = 'approved';
+      await sub.save();
+      return res.json({ message: 'Driver verification approved.', user: { id: user._id, verificationStatus: user.driverDetails.verificationStatus }, submission: sub });
+    }
+    case 'route_application': {
+      // Expected: { targetRouteId, currentRouteId?, monthsServed, reason? }
+      const session = await mongoose.startSession();
+      session.startTransaction();
+      try {
+        const user = await User.findById(sub.submittedBy).session(session);
+        if (!user) {
+          await session.abortTransaction();
+          res.status(404);
+          throw new Error('User not found');
+        }
+        if (user.role !== 'taxiDriver') {
+          await session.abortTransaction();
+          res.status(400);
+          throw new Error('User is not a taxi driver');
+        }
+        if (user.driverDetails?.verificationStatus !== 'verified') {
+          await session.abortTransaction();
+          res.status(400);
+          throw new Error('Driver must be verified before route assignment');
+        }
+        const targetRoute = await Route.findById(payload.targetRouteId).session(session);
+        if (!targetRoute) {
+          await session.abortTransaction();
+          res.status(404);
+          throw new Error('Target route not found');
+        }
+        if (targetRoute.status !== 'approved') {
+          await session.abortTransaction();
+          res.status(400);
+          throw new Error('Can only assign approved routes');
+        }
+        // If user has a current route, decrement its activeDriverCount
+        const currentRouteId = user.driverDetails?.currentRoute;
+        if (currentRouteId) {
+          const currentRoute = await Route.findById(currentRouteId).session(session);
+          if (currentRoute) {
+            // Use updateOne to avoid full document validation
+            await Route.updateOne(
+              { _id: currentRouteId },
+              { $set: { activeDriverCount: Math.max(0, (currentRoute.activeDriverCount || 0) - 1) } },
+              { session }
+            );
+          }
+        }
+        // Increment target route's activeDriverCount
+        // Use updateOne to avoid full document validation
+        await Route.updateOne(
+          { _id: payload.targetRouteId },
+          { $inc: { activeDriverCount: 1 } },
+          { session }
+        );
+        // Update user's current route
+        user.driverDetails.currentRoute = targetRoute._id;
+        user.driverDetails.routeAssignedDate = new Date();
+        await user.save({ session });
+        sub.adminNotes = adminNotes || sub.adminNotes;
+        sub.status = 'approved';
+        await sub.save({ session });
+        await session.commitTransaction();
+        
+        // Fetch updated route to get the new activeDriverCount
+        const updatedRoute = await Route.findById(payload.targetRouteId);
+        return res.json({
+          message: 'Route application approved. Driver assigned to route.',
+          user: { id: user._id, currentRoute: user.driverDetails.currentRoute },
+          route: { id: updatedRoute._id, activeDriverCount: updatedRoute.activeDriverCount },
+          submission: sub
+        });
+      } catch (error) {
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        session.endSession();
+      }
     }
     default:
       res.status(400);
