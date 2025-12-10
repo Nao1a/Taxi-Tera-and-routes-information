@@ -6,12 +6,15 @@ const User = require('../models/UserModel');
 const mongoose = require('mongoose');
 const { refreshGraph } = require('./searchController');
 
-// GET /api/admin/submissions?status=pending|approved|rejected
+// GET /api/admin/submissions?status=pending|approved|rejected&type=newTera|newRoute|...
 const getAllSubmissions = asyncHandler(async (req, res) => {
-  const { status } = req.query;
+  const { status, type } = req.query;
   const filter = {};
   if (status && ['pending', 'approved', 'rejected'].includes(status)) {
     filter.status = status;
+  }
+  if (type && ['newTera', 'newRoute', 'fareUpdate', 'conditionUpdate', 'driver_verification', 'route_application'].includes(type)) {
+    filter.type = type;
   }
   const items = await UserSubmission.find(filter)
     .populate('submittedBy', 'username email role')

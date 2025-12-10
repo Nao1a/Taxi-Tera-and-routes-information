@@ -13,6 +13,10 @@ const UserSchema = new mongoose.Schema({
     reputation : {type : Number, default : 5},
     isSubmissionBanned: { type: Boolean, default: false },
     submissionBanReason: { type: String },
+    // Account ban (complete ban from platform)
+    isAccountBanned: { type: Boolean, default: false },
+    accountBanReason: { type: String },
+    accountBannedAt: { type: Date },
     // Driver-specific fields
     driverDetails: {
         licenseText: { type: String },
@@ -28,7 +32,9 @@ const UserSchema = new mongoose.Schema({
             carPhoto: { type: String } // Cloudinary URL
         },
         currentRoute: { type: mongoose.Schema.Types.ObjectId, ref: 'Route' },
-        routeAssignedDate: { type: Date }
+        routeAssignedDate: { type: Date },
+        isBannedFromRoute: { type: Boolean, default: false },
+        routeBanReason: { type: String }
     }
 }, { timestamps : true })
 

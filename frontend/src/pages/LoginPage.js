@@ -16,7 +16,7 @@ const LoginPage = () => {
       .then((data) => {
         const role = data?.role || authService.getCurrentUser()?.role;
         if (role === 'admin' || role === 'moderator') {
-          navigate('/admin/submissions');
+          navigate('/admin');
         } else if (role === 'taxiDriver') {
           navigate('/driver-dashboard');
         } else {

@@ -61,7 +61,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="p-4 flex justify-between items-center" style={{ backgroundColor: 'rgb(var(--surface))', color: 'rgb(var(--text))', borderBottom: '1px solid rgb(var(--border))' }}>
+    <nav className="fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-50" style={{ backgroundColor: 'rgb(var(--surface))', color: 'rgb(var(--text))', borderBottom: '1px solid rgb(var(--border))' }}>
       <div className="text-3xl font-bold">
         <Link to="/">TERAS</Link>
       </div>
@@ -178,7 +178,7 @@ const Navbar = () => {
                     {/* Admin Panel - Only show for admin/moderator */}
                     {(currentUser?.role === 'admin' || currentUser?.role === 'moderator') && (
                       <Link 
-                        to="/admin/submissions" 
+                        to="/admin" 
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center px-4 py-2.5 text-sm transition-colors"
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(var(--brand-rgb), 0.1)'}

@@ -17,8 +17,10 @@ export async function getMySubmissions() {
   return data;
 }
 
-export async function adminListSubmissions(status) {
-  const { data } = await api.get('/api/admin/submissions', { headers: authHeaders(), params: { status } });
+export async function adminListSubmissions(status, type = null) {
+  const params = { status };
+  if (type) params.type = type;
+  const { data } = await api.get('/api/admin/submissions', { headers: authHeaders(), params });
   return data;
 }
 
@@ -50,4 +52,16 @@ export const adminManage = {
   unbanUser: async (id) => (await api.post(`/api/admin/manage/users/${id}/unban`, {}, { headers: authHeaders() })).data,
   // Analytics
   getAnalytics: async () => (await api.get('/api/admin/analytics', { headers: authHeaders() })).data,
+  // User management
+  banAccount: async (id, reason) => (await api.post(`/api/admin/manage/users/${id}/ban-account`, { reason }, { headers: authHeaders() })).data,
+  unbanAccount: async (id) => (await api.post(`/api/admin/manage/users/${id}/unban-account`, {}, { headers: authHeaders() })).data,
+  changeUserRole: async (id, role) => (await api.patch(`/api/admin/manage/users/${id}/role`, { role }, { headers: authHeaders() })).data,
+  // Driver management
+  listDrivers: async () => (await api.get('/api/admin/drivers', { headers: authHeaders() })).data,
+  verifyDriver: async (id) => (await api.post(`/api/admin/drivers/${id}/verify`, {}, { headers: authHeaders() })).data,
+  rejectDriverVerification: async (id) => (await api.post(`/api/admin/drivers/${id}/reject-verification`, {}, { headers: authHeaders() })).data,
+  banDriverFromRoute: async (id, reason, removeFromRoute) => (await api.post(`/api/admin/drivers/${id}/ban-from-route`, { reason, removeFromRoute }, { headers: authHeaders() })).data,
+  unbanDriverFromRoute: async (id) => (await api.post(`/api/admin/drivers/${id}/unban-from-route`, {}, { headers: authHeaders() })).data,
+  forceRemoveDriverFromRoute: async (id) => (await api.post(`/api/admin/drivers/${id}/force-remove-route`, {}, { headers: authHeaders() })).data,
+  assignDriverToRoute: async (id, routeId) => (await api.post(`/api/admin/drivers/${id}/assign-route`, { routeId }, { headers: authHeaders() })).data,
 };

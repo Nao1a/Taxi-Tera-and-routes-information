@@ -145,7 +145,10 @@ const deleteRoute = asyncHandler(async (req, res) => {
 
 // Users: ban/unban
 const listUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({}).select('username email role isSubmissionBanned submissionBanReason createdAt').sort({ createdAt: -1 }).lean();
+  const users = await User.find({ role: { $ne: 'taxiDriver' } })
+    .select('username email role isSubmissionBanned submissionBanReason isAccountBanned accountBanReason reputation createdAt')
+    .sort({ createdAt: -1 })
+    .lean();
   res.json(users);
 });
 
@@ -171,15 +174,65 @@ const unbanUser = asyncHandler(async (req, res) => {
   res.json({ message: 'User unbanned from submissions' });
 });
 
+// Account ban (complete ban from platform)
+const banAccount = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body || {};
+  const user = await User.findById(id);
+  if (!user) { res.status(404); throw new Error('User not found'); }
+  if (user.role === 'admin') { res.status(403); throw new Error('Cannot ban an admin user'); }
+  user.isAccountBanned = true;
+  user.accountBanReason = reason || 'Account banned by admin';
+  user.accountBannedAt = new Date();
+  await user.save();
+  res.json({ message: 'User account banned' });
+});
+
+const unbanAccount = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const user = await User.findById(id);
+  if (!user) { res.status(404); throw new Error('User not found'); }
+  user.isAccountBanned = false;
+  user.accountBanReason = undefined;
+  user.accountBannedAt = undefined;
+  await user.save();
+  res.json({ message: 'User account unbanned' });
+});
+
+// Change user role
+const changeUserRole = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body || {};
+  if (!role || !['user', 'moderator', 'admin', 'taxiDriver'].includes(role)) {
+    res.status(400);
+    throw new Error('Invalid role');
+  }
+  const user = await User.findById(id);
+  if (!user) { res.status(404); throw new Error('User not found'); }
+  if (user.role === 'admin' && role !== 'admin') {
+    res.status(403);
+    throw new Error('Cannot change admin role');
+  }
+  user.role = role;
+  await user.save();
+  res.json({ message: 'User role updated', user });
+});
+
 // Analytics endpoint
 const getAnalytics = asyncHandler(async (req, res) => {
   const UserSubmission = require('../models/UserSubmissionModel');
   
   // Get all data
-  const users = await User.find({}).select('role isSubmissionBanned createdAt').lean();
+  const users = await User.find({}).select('role isSubmissionBanned isAccountBanned createdAt').lean();
+  const drivers = await User.find({ role: 'taxiDriver' })
+    .select('driverDetails createdAt')
+    .populate('driverDetails.currentRoute', 'fromTera toTera')
+    .lean();
   const teras = await TaxiTera.find({}).select('condition createdAt').lean();
-  const routes = await Route.find({}).select('roadCondition fare distance createdAt').lean();
-  const submissions = await UserSubmission.find({}).select('status type createdAt submittedBy').lean();
+  const routes = await Route.find({}).select('roadCondition fare distance activeDriverCount createdAt')
+    .populate('fromTera toTera', 'name')
+    .lean();
+  const submissions = await UserSubmission.find({}).select('status type createdAt submittedBy updatedAt').lean();
 
   // Calculate statistics
   const now = new Date();
@@ -226,17 +279,138 @@ const getAnalytics = asyncHandler(async (req, res) => {
     ((submissions.filter(s => s.status === 'approved').length / submissions.length) * 100).toFixed(1) : 0;
   const newSubmissionsThisWeek = submissions.filter(s => new Date(s.createdAt) >= sevenDaysAgo).length;
 
-  // Recent activity (last 10 submissions)
+  // Driver stats
+  const driversByStatus = drivers.reduce((acc, d) => {
+    const status = d.driverDetails?.verificationStatus || 'unverified';
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const driversWithRoute = drivers.filter(d => d.driverDetails?.currentRoute).length;
+  const driversWithoutRoute = drivers.length - driversWithRoute;
+  
+  // Calculate average months served
+  let totalMonths = 0;
+  let driversWithMonths = 0;
+  drivers.forEach(d => {
+    if (d.driverDetails?.routeAssignedDate) {
+      const assignedDate = new Date(d.driverDetails.routeAssignedDate);
+      const now = new Date();
+      const diffTime = Math.abs(now - assignedDate);
+      const months = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 30));
+      totalMonths += months;
+      driversWithMonths++;
+    }
+  });
+  const avgMonthsServed = driversWithMonths > 0 ? (totalMonths / driversWithMonths).toFixed(1) : 0;
+
+  // Routes with no drivers
+  const routesWithNoDrivers = routes.filter(r => !r.activeDriverCount || r.activeDriverCount === 0).length;
+
+  // Drivers by route
+  const driversByRoute = {};
+  routes.forEach(route => {
+    const routeName = `${route.fromTera?.name || 'Unknown'} → ${route.toTera?.name || 'Unknown'}`;
+    driversByRoute[routeName] = route.activeDriverCount || 0;
+  });
+
+  // Submission trends (last 30 days)
+  const submissionTrends = [];
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    const dateStr = date.toISOString().split('T')[0];
+    const count = submissions.filter(s => {
+      const subDate = new Date(s.createdAt).toISOString().split('T')[0];
+      return subDate === dateStr;
+    }).length;
+    submissionTrends.push({ date: dateStr, count });
+  }
+
+  // Calculate average processing time (for approved/rejected submissions)
+  let totalProcessingTime = 0;
+  let processedCount = 0;
+  submissions.forEach(s => {
+    if (s.status !== 'pending' && s.updatedAt && s.createdAt) {
+      const processingTime = new Date(s.updatedAt) - new Date(s.createdAt);
+      totalProcessingTime += processingTime;
+      processedCount++;
+    }
+  });
+  const avgProcessingTimeHours = processedCount > 0 
+    ? (totalProcessingTime / processedCount / (1000 * 60 * 60)).toFixed(1) 
+    : 0;
+
+  // Approval rate by type
+  const approvalRateByType = {};
+  ['newTera', 'newRoute', 'fareUpdate', 'conditionUpdate', 'driver_verification', 'route_application'].forEach(type => {
+    const typeSubs = submissions.filter(s => s.type === type);
+    if (typeSubs.length > 0) {
+      const approved = typeSubs.filter(s => s.status === 'approved').length;
+      approvalRateByType[type] = ((approved / typeSubs.length) * 100).toFixed(1);
+    }
+  });
+
+  // Routes by fare range
+  const fareRanges = {
+    '0-50': 0,
+    '51-100': 0,
+    '101-200': 0,
+    '201+': 0
+  };
+  routes.forEach(route => {
+    const fare = route.fare || 0;
+    if (fare <= 50) fareRanges['0-50']++;
+    else if (fare <= 100) fareRanges['51-100']++;
+    else if (fare <= 200) fareRanges['101-200']++;
+    else fareRanges['201+']++;
+  });
+
+  // Most requested routes (from route_application submissions)
+  const routeRequests = {};
+  submissions.filter(s => s.type === 'route_application').forEach(s => {
+    const routeId = s.payload?.targetRouteId;
+    if (routeId) {
+      // Convert to string to ensure consistent comparison
+      const routeIdStr = routeId.toString ? routeId.toString() : String(routeId);
+      routeRequests[routeIdStr] = (routeRequests[routeIdStr] || 0) + 1;
+    }
+  });
+  const mostRequestedRoutes = Object.entries(routeRequests)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([routeId, count]) => {
+      const route = routes.find(r => r._id.toString() === routeId);
+      return {
+        routeId,
+        name: route ? `${route.fromTera?.name || 'Unknown'} → ${route.toTera?.name || 'Unknown'}` : 'Unknown',
+        count
+      };
+    });
+
+  // User growth trend (last 30 days)
+  const userGrowthTrend = [];
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    const dateStr = date.toISOString().split('T')[0];
+    const count = users.filter(u => {
+      const userDate = new Date(u.createdAt).toISOString().split('T')[0];
+      return userDate === dateStr;
+    }).length;
+    userGrowthTrend.push({ date: dateStr, count });
+  }
+
+  // Recent activity (last 20 submissions)
   const recentSubmissions = await UserSubmission.find({})
     .populate('submittedBy', 'username')
     .sort({ createdAt: -1 })
-    .limit(10)
+    .limit(20)
     .select('type status createdAt submittedBy')
     .lean();
 
   res.json({
     totals: {
       users: users.length,
+      drivers: drivers.length,
       teras: teras.length,
       routes: routes.length,
       submissions: submissions.length
@@ -244,8 +418,17 @@ const getAnalytics = asyncHandler(async (req, res) => {
     users: {
       byRole: usersByRole,
       banned: bannedUsers,
+      accountBanned: users.filter(u => u.isAccountBanned).length,
       newThisMonth: newUsersThisMonth,
-      newThisWeek: newUsersThisWeek
+      newThisWeek: newUsersThisWeek,
+      growthTrend: userGrowthTrend
+    },
+    drivers: {
+      byStatus: driversByStatus,
+      withRoute: driversWithRoute,
+      withoutRoute: driversWithoutRoute,
+      avgMonthsServed,
+      byRoute: driversByRoute
     },
     teras: {
       byCondition: terasByCondition,
@@ -255,14 +438,20 @@ const getAnalytics = asyncHandler(async (req, res) => {
       byCondition: routesByCondition,
       avgFare,
       totalDistance,
-      newThisMonth: newRoutesThisMonth
+      newThisMonth: newRoutesThisMonth,
+      withNoDrivers: routesWithNoDrivers,
+      byFareRange: fareRanges,
+      mostRequested: mostRequestedRoutes
     },
     submissions: {
       byStatus: submissionsByStatus,
       byType: submissionsByType,
       pending: pendingSubmissions,
       approvalRate,
-      newThisWeek: newSubmissionsThisWeek
+      approvalRateByType,
+      newThisWeek: newSubmissionsThisWeek,
+      avgProcessingTimeHours,
+      trends: submissionTrends
     },
     recentActivity: recentSubmissions
   });
@@ -271,6 +460,6 @@ const getAnalytics = asyncHandler(async (req, res) => {
 module.exports = {
   listTeras, createTera, updateTera, deleteTera,
   listRoutes, createRoute, updateRoute, deleteRoute,
-  listUsers, banUser, unbanUser,
+  listUsers, banUser, unbanUser, banAccount, unbanAccount, changeUserRole,
   getAnalytics
 };
