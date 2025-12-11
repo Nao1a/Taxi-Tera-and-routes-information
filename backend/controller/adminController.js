@@ -10,12 +10,24 @@ const { refreshGraph } = require('./searchController');
 const getAllSubmissions = asyncHandler(async (req, res) => {
   const { status, type } = req.query;
   const filter = {};
+  
+  // Filter by status if provided and valid
   if (status && ['pending', 'approved', 'rejected'].includes(status)) {
     filter.status = status;
   }
-  if (type && ['newTera', 'newRoute', 'fareUpdate', 'conditionUpdate', 'driver_verification', 'route_application'].includes(type)) {
-    filter.type = type;
+  
+  // Filter by type if provided and valid - ensure exact match
+  const validTypes = ['newTera', 'newRoute', 'fareUpdate', 'conditionUpdate', 'driver_verification', 'route_application'];
+  if (type) {
+    const typeStr = String(type).trim();
+    if (validTypes.includes(typeStr)) {
+      filter.type = typeStr;
+    } else {
+      // Invalid type provided - return empty results to prevent showing wrong submissions
+      return res.json([]);
+    }
   }
+  
   const items = await UserSubmission.find(filter)
     .populate('submittedBy', 'username email role')
     .sort({ createdAt: -1 })

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import marker2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -27,6 +27,7 @@ const TeraSearchView = ({ teraData }) => {
       maxZoom: 19,
     }).addTo(map);
     mapInstanceRef.current = map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update markers when teraData changes
@@ -76,7 +77,8 @@ const TeraSearchView = ({ teraData }) => {
           <div style="font-family: sans-serif;">
             <strong>${dest.name}</strong><br/>
             <span style="color: #666;">Fare: ${dest.fare}</span><br/>
-            <span style="color: #666;">Time: ${dest.estimatedTimeMin} min</span>
+            <span style="color: #666;">Time: ${dest.estimatedTimeMin} min</span><br/>
+            <span style="color: #666;">Drivers: ${dest.activeDriverCount || 0}</span>
           </div>
         `);
         markersRef.current.push(destMarker);
@@ -169,6 +171,9 @@ const TeraSearchView = ({ teraData }) => {
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     ⏱️ Time: <span className="font-semibold">{dest.estimatedTimeMin} min</span>
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    🚗 Drivers: <span className="font-semibold text-blue-600 dark:text-blue-400">{dest.activeDriverCount || 0}</span>
                   </p>
                 </div>
               </div>

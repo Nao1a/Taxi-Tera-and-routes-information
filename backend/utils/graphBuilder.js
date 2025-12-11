@@ -1,7 +1,7 @@
 // Utility to build an in-memory adjacency list for taxi teras
 // routes: array of Route mongoose docs or plain objects with fromTera/toTera (ObjectId) and fare, estimatedTimeMin
 // teras: array of TaxiTera docs { _id, name }
-// Output: { teraId: [ { to, fare, time } ] }
+// Output: { teraId: [ { to, fare, time, routeId } ] }
 // NOTE: All routes are considered bidirectional. We create reverse edges automatically.
 
 function buildAdjacencyList(routes, teras) {
@@ -18,17 +18,18 @@ function buildAdjacencyList(routes, teras) {
     const to = (r.toTera || r.to || r.toId || r.to_id || r.toTeraId).toString();
     const fare = Number(r.fare) || 0;
     const time = Number(r.estimatedTimeMin || r.time || r.duration) || 0;
+    const routeId = (r._id || r.id || r.routeId).toString();
 
     if (!graph[from]) graph[from] = [];
     if (!graph[to]) graph[to] = [];
 
     // Push forward edge if not duplicate
     if (!graph[from].some(e => e.to === to)) {
-      graph[from].push({ to, fare, time });
+      graph[from].push({ to, fare, time, routeId });
     }
     // Push reverse edge if not duplicate
     if (!graph[to].some(e => e.to === from)) {
-      graph[to].push({ to: from, fare, time });
+      graph[to].push({ to: from, fare, time, routeId });
     }
   }
 

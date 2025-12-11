@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { adminListSubmissions, approveSubmission, rejectSubmission } from '../services/submissionService';
 
 export const useSubmissions = (type, status = 'pending') => {
@@ -8,22 +8,24 @@ export const useSubmissions = (type, status = 'pending') => {
   const [currentStatus, setCurrentStatus] = useState(status);
   const [note, setNote] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const data = await adminListSubmissions(currentStatus, type);
+      // Ensure type is always a string or null
+      const typeParam = type && typeof type === 'string' ? type.trim() : null;
+      const data = await adminListSubmissions(currentStatus, typeParam);
       setItems(data);
     } catch (e) {
       setError(e?.response?.data?.message || e?.data?.message || 'Failed to load submissions');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentStatus, type]);
 
   useEffect(() => {
     load();
-  }, [currentStatus, type]);
+  }, [load]);
 
   const handleApprove = async (id) => {
     try {

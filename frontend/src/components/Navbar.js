@@ -61,7 +61,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-50" style={{ backgroundColor: 'rgb(var(--surface))', color: 'rgb(var(--text))', borderBottom: '1px solid rgb(var(--border))' }}>
+    <nav className="fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-[1001]" style={{ backgroundColor: 'rgb(var(--surface))', color: 'rgb(var(--text))', borderBottom: '1px solid rgb(var(--border))' }}>
       <div className="text-3xl font-bold">
         <Link to="/">TERAS</Link>
       </div>

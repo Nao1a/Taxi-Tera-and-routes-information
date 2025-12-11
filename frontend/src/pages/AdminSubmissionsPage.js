@@ -28,7 +28,9 @@ const AdminSubmissionsPage = () => {
       if (tab === 'submissions') {
         const data = await adminListSubmissions(status); setItems(data);
       } else if (tab === 'teras') {
-        const t = await adminManage.listTeras(); setTeras(t);
+        const [t, r] = await Promise.all([adminManage.listTeras(), adminManage.listRoutes()]);
+        setTeras(t);
+        setRoutes(r);
       } else if (tab === 'routes') {
         const r = await adminManage.listRoutes(); setRoutes(r);
       } else if (tab === 'users') {
@@ -151,18 +153,38 @@ const AdminSubmissionsPage = () => {
             <div className="font-semibold mb-2">Add Tera</div>
             <TeraForm busy={busy} onSubmit={async (obj)=>{ try { setBusy(true); await adminManage.createTera(obj); setError(''); setNotice('Tera created'); } catch(e){ setError(e?.response?.data?.message || 'Failed to create tera'); } finally { setBusy(false); load(); } }} />
           </div>
-          {teraList.map(t => (
-            <div key={t._id} className="p-3 border rounded" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
-              <div className="flex justify-between items-center">
-                <div className="font-medium">{t.name}</div>
-                <div className="text-xs text-gray-400">{t._id}</div>
+          {teraList.map(t => {
+            // Find routes that start from this tera
+            const routesFromTera = routes.filter(r => {
+              const fromTeraId = r.fromTera?._id || r.fromTera;
+              return String(fromTeraId) === String(t._id);
+            });
+            return (
+              <div key={t._id} className="p-3 border rounded" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
+                <div className="flex justify-between items-center">
+                  <div className="font-medium">{t.name}</div>
+                  <div className="text-xs text-gray-400">{t._id}</div>
+                </div>
+                {routesFromTera.length > 0 && (
+                  <div className="mt-3 mb-3 p-2 rounded" style={{ backgroundColor: 'rgb(var(--surface))', border: '1px solid rgb(var(--border))' }}>
+                    <div className="text-sm font-semibold mb-2">Routes from this tera:</div>
+                    <div className="space-y-1">
+                      {routesFromTera.map(r => (
+                        <div key={r._id} className="text-sm text-gray-600 dark:text-gray-400 flex justify-between items-center">
+                          <span>→ {r.toTera?.name || 'Unknown'}</span>
+                          <span className="text-xs font-medium">Drivers: {r.activeDriverCount || 0}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <TeraForm busy={busy} tera={t} onSubmit={async (obj)=>{ try { setBusy(true); await adminManage.updateTera(t._id, obj); setError(''); setNotice('Tera updated'); } catch(e){ setError(e?.response?.data?.message || 'Failed to update tera'); } finally { setBusy(false); load(); } }} />
+                <div className="mt-2">
+                  <button onClick={async()=>{ setBusy(true); await adminManage.deleteTera(t._id); setBusy(false); load(); }} className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50" disabled={busy}>Delete</button>
+                </div>
               </div>
-              <TeraForm busy={busy} tera={t} onSubmit={async (obj)=>{ try { setBusy(true); await adminManage.updateTera(t._id, obj); setError(''); setNotice('Tera updated'); } catch(e){ setError(e?.response?.data?.message || 'Failed to update tera'); } finally { setBusy(false); load(); } }} />
-              <div className="mt-2">
-                <button onClick={async()=>{ setBusy(true); await adminManage.deleteTera(t._id); setBusy(false); load(); }} className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50" disabled={busy}>Delete</button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

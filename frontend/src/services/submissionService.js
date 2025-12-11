@@ -19,7 +19,10 @@ export async function getMySubmissions() {
 
 export async function adminListSubmissions(status, type = null) {
   const params = { status };
-  if (type) params.type = type;
+  // Always include type if provided (even if empty string, to ensure filtering works)
+  if (type !== null && type !== undefined) {
+    params.type = String(type).trim();
+  }
   const { data } = await api.get('/api/admin/submissions', { headers: authHeaders(), params });
   return data;
 }

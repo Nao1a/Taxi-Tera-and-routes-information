@@ -106,7 +106,12 @@ const SubmissionPageBase = ({
               </div>
             </div>
 
-            {renderCustomContent ? renderCustomContent(it) : (
+            {renderCustomContent ? (
+              <>
+                {renderCustomContent(it)}
+                {renderSubmissionMap(it)}
+              </>
+            ) : (
               <>
                 <pre className="bg-gray-50 dark:bg-gray-900 text-xs p-4 mt-2 rounded-lg overflow-auto max-h-40">
                   {JSON.stringify(it.payload, null, 2)}

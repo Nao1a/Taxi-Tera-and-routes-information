@@ -116,14 +116,48 @@ async function getTeraDetails(req, res, next) {
     // Get direct destinations from adjacency graph
     const directRoutes = global.adjGraph[teraId] || [];
     
-    // Map destinations with names and coordinates
-    const destinations = directRoutes.map(edge => ({
-      id: edge.to,
-      name: global.teraNameMap[edge.to] || edge.to,
-      coordinates: global.teraCoordMap?.[edge.to] || null,
-      fare: edge.fare,
-      estimatedTimeMin: edge.time
-    }));
+    // Fetch route details including activeDriverCount
+    // Look up routes by fromTera and toTera (handles bidirectional routes)
+    // Build a single query with all route combinations
+    const routeConditions = [];
+    directRoutes.forEach(edge => {
+      routeConditions.push(
+        { fromTera: teraId, toTera: edge.to },
+        { fromTera: edge.to, toTera: teraId }
+      );
+    });
+    
+    const routesData = routeConditions.length > 0
+      ? await Route.find({ $or: routeConditions, status: 'approved' })
+          .select('fromTera toTera activeDriverCount').lean()
+      : [];
+    
+    // Build route map by fromTera/toTera (bidirectional)
+    const routeMap = routesData.reduce((acc, r) => {
+      const fromId = r.fromTera.toString();
+      const toId = r.toTera.toString();
+      const key1 = `${fromId}-${toId}`;
+      const key2 = `${toId}-${fromId}`;
+      acc[key1] = r.activeDriverCount || 0;
+      acc[key2] = r.activeDriverCount || 0;
+      return acc;
+    }, {});
+    
+    // Map destinations with names, coordinates, and driver count
+    const destinations = directRoutes.map(edge => {
+      const key1 = `${teraId}-${edge.to}`;
+      const key2 = `${edge.to}-${teraId}`;
+      const driverCount = routeMap[key1] || routeMap[key2] || 0;
+      
+      return {
+        id: edge.to,
+        name: global.teraNameMap[edge.to] || edge.to,
+        coordinates: global.teraCoordMap?.[edge.to] || null,
+        fare: edge.fare,
+        estimatedTimeMin: edge.time,
+        activeDriverCount: driverCount
+      };
+    });
 
     // Prepare tera coordinates (convert from GeoJSON [lng, lat] to [lat, lng])
     const coords = Array.isArray(teraDoc.location?.coordinates) && teraDoc.location.coordinates.length === 2

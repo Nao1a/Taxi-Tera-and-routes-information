@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { adminManage } from '../../../services/submissionService';
-import { API_BASE_URL } from '../../../config/apiConfig';
-import Autocomplete from '../../../components/Autocomplete';
 
 const AdminDriverManagement = () => {
   const [drivers, setDrivers] = useState([]);
