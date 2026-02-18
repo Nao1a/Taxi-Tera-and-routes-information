@@ -1,53 +1,266 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Light mode neutrals */
-  --bg: 245 246 250;      /* slate-50 with a hint of blue */
-  --surface: 255 255 255; /* white */
-  --text: 17 24 39;       /* gray-900 */
-  --muted: 107 114 128;   /* gray-500 */
-  --border: 229 231 235;  /* gray-200 */
-  --brand: 79 70 229;     /* brand-600 */
-  --brand-rgb: 79, 70, 229; /* brand-600 RGB for rgba */
+  /* Light mode — warm slate palette */
+  --bg: 250 250 249;
+  --surface: 255 255 255;
+  --text: 28 25 23;
+  --foreground: 28 25 23;
+  --muted: 120 113 108;
+  --border: 231 229 228;
+  --brand: 180 83 9;
+  --brand-rgb: 180, 83, 9;
+  --brand-light: 217 119 6;
+  --brand-lighter: 251 191 36;
+
+  /* Semantic status colors */
+  --success: 22 163 74;
+  --error: 185 28 28;
+  --warning: 161 98 7;
+  --info: 14 116 144;
+
+  /* Glass effect tokens - light */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.35);
+  --glass-shadow: rgba(0, 0, 0, 0.06);
 }
 
 .dark:root {
-  /* Dark mode neutrals */
-  --bg: 13 17 23;         /* near black but not pure */
-  --surface: 22 27 34;    /* dark surface */
-  --text: 236 236 241;    /* off white */
-  --muted: 160 174 192;   /* slate-400 */
-  --border: 48 54 61;     /* dark border */
-  --brand: 99 102 241;    /* brand-500 for dark */
-  --brand-rgb: 99, 102, 241; /* brand-500 RGB for rgba */
+  --bg: 12 10 9;
+  --surface: 28 25 23;
+  --text: 245 245 244;
+  --foreground: 245 245 244;
+  --muted: 168 162 158;
+  --border: 68 64 60;
+  --brand: 217 119 6;
+  --brand-rgb: 217, 119, 6;
+  --brand-light: 245 158 11;
+  --brand-lighter: 251 191 36;
+
+  /* semantic */
+  --success: 34 197 94;
+  --error: 239 68 68;
+  --warning: 234 179 8;
+  --info: 6 182 212;
+
+  /* Glass effect tokens - dark */
+  --glass-bg: rgba(28, 25, 23, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-shadow: rgba(0, 0, 0, 0.25);
 }
 
-html, body, #root {
+html,
+body,
+#root {
   min-height: 100%;
 }
 
 body {
   margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: rgb(var(--bg));
   color: rgb(var(--text));
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Dropdown Animation */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* ═══════════════════════════════════════
+   Focus Ring Utility
+   ═══════════════════════════════════════ */
+*:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════
+   Glass Card Utilities
+   ═══════════════════════════════════════ */
+@layer components {
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 24px var(--glass-shadow);
+    transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card:hover {
+    box-shadow: 0 8px 32px var(--glass-shadow);
+    transform: translateY(-1px);
+  }
+
+  .glass-card-static {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 24px var(--glass-shadow);
+  }
+
+  /* Gradient icon badge containers — professional muted tones */
+  .icon-badge {
+    @apply p-3 rounded-xl;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .icon-badge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .icon-badge-amber {
+    background: linear-gradient(135deg, #b45309, #d97706);
+  }
+
+  .icon-badge-emerald {
+    background: linear-gradient(135deg, #047857, #059669);
+  }
+
+  .icon-badge-teal {
+    background: linear-gradient(135deg, #0f766e, #0d9488);
+  }
+
+  .icon-badge-sky {
+    background: linear-gradient(135deg, #0369a1, #0284c7);
+  }
+
+  .icon-badge-indigo {
+    background: linear-gradient(135deg, #3730a3, #4f46e5);
+  }
+
+  .icon-badge-violet {
+    background: linear-gradient(135deg, #6d28d9, #7c3aed);
+  }
+
+  .icon-badge-rose {
+    background: linear-gradient(135deg, #9f1239, #e11d48);
+  }
+
+  .icon-badge-cyan {
+    background: linear-gradient(135deg, #0e7490, #06b6d4);
+  }
+
+  /* Form input base (reusable) */
+  .input-base {
+    @apply w-full p-4 rounded-xl transition-colors;
+    background-color: rgb(var(--surface));
+    border: 1px solid rgb(var(--border));
+    color: rgb(var(--text));
+  }
+
+  .input-base::placeholder {
+    color: rgb(var(--muted));
+  }
+
+  .input-base:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(var(--brand));
+    border-color: rgb(var(--brand));
+  }
+}
+
+/* ═══════════════════════════════════════
+   Stagger Animation Delays
+   ═══════════════════════════════════════ */
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+
+.stagger-5 {
+  animation-delay: 0.25s;
+}
+
+.stagger-6 {
+  animation-delay: 0.3s;
+}
+
+.stagger-7 {
+  animation-delay: 0.35s;
+}
+
+.stagger-8 {
+  animation-delay: 0.4s;
+}
+
+/* ═══════════════════════════════════════
+   Shimmer Loading
+   ═══════════════════════════════════════ */
+.shimmer-loading {
+  background: linear-gradient(90deg,
+      rgba(var(--border), 0.3) 25%,
+      rgba(var(--border), 0.6) 50%,
+      rgba(var(--border), 0.3) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ═══════════════════════════════════════
+   Grain Texture Overlay
+   ═══════════════════════════════════════ */
+.grain-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════ */
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -56,4 +269,81 @@ code {
 
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Toast slide-in */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-slide-out-right {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
+/* Spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spinner {
+  animation: spin 0.7s linear infinite;
+}
+
+/* ═══════════════════════════════════════
+   Scrollbar Customization
+   ═══════════════════════════════════════ */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--border));
+  border-radius: 20px;
 }

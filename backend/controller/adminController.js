@@ -267,7 +267,7 @@ const approveSubmission = asyncHandler(async (req, res) => {
       return res.json({ message: 'Driver verification approved.', user: { id: user._id, verificationStatus: user.driverDetails.verificationStatus }, submission: sub });
     }
     case 'route_application': {
-      // Expected: { targetRouteId, currentRouteId?, monthsServed, reason? }
+      // Expected: { targetRouteId, currentRouteId?, monthsServed, reason?, carId? }
       const session = await mongoose.startSession();
       session.startTransaction();
       try {
@@ -277,16 +277,7 @@ const approveSubmission = asyncHandler(async (req, res) => {
           res.status(404);
           throw new Error('User not found');
         }
-        if (user.role !== 'taxiDriver') {
-          await session.abortTransaction();
-          res.status(400);
-          throw new Error('User is not a taxi driver');
-        }
-        if (user.driverDetails?.verificationStatus !== 'verified') {
-          await session.abortTransaction();
-          res.status(400);
-          throw new Error('Driver must be verified before route assignment');
-        }
+
         const targetRoute = await Route.findById(payload.targetRouteId).session(session);
         if (!targetRoute) {
           await session.abortTransaction();
@@ -298,40 +289,77 @@ const approveSubmission = asyncHandler(async (req, res) => {
           res.status(400);
           throw new Error('Can only assign approved routes');
         }
-        // If user has a current route, decrement its activeDriverCount
-        const currentRouteId = user.driverDetails?.currentRoute;
-        if (currentRouteId) {
-          const currentRoute = await Route.findById(currentRouteId).session(session);
-          if (currentRoute) {
-            // Use updateOne to avoid full document validation
-            await Route.updateOne(
-              { _id: currentRouteId },
-              { $set: { activeDriverCount: Math.max(0, (currentRoute.activeDriverCount || 0) - 1) } },
-              { session }
-            );
+
+        // Logic A: Car Application (Owner)
+        if (payload.carId) {
+          const Car = require('../models/CarModel');
+          const car = await Car.findById(payload.carId).session(session);
+          if (!car) {
+            await session.abortTransaction();
+            res.status(404);
+            throw new Error('Car not found');
           }
+          
+          // Decrement old route count if exists?
+          if (car.routeId && car.routeId.toString() !== payload.targetRouteId) {
+             await Route.updateOne({ _id: car.routeId }, { $inc: { activeDriverCount: -1 } }, { session });
+          }
+
+          // Increment target route
+          await Route.updateOne(
+            { _id: payload.targetRouteId },
+            { $inc: { activeDriverCount: 1 } },
+            { session }
+          );
+
+          car.routeId = payload.targetRouteId;
+          await car.save({ session });
+
+        } else {
+          // Logic B: Driver Application
+          if (user.role !== 'taxiDriver') {
+            await session.abortTransaction();
+            res.status(400);
+            throw new Error('User is not a taxi driver (and no carId provided)');
+          }
+          if (user.driverDetails?.verificationStatus !== 'verified') {
+            await session.abortTransaction();
+            res.status(400);
+            throw new Error('Driver must be verified before route assignment');
+          }
+
+          // If user has a current route, decrement its activeDriverCount
+          const currentRouteId = user.driverDetails?.currentRoute;
+          if (currentRouteId) {
+            const currentRoute = await Route.findById(currentRouteId).session(session);
+            if (currentRoute) {
+              await Route.updateOne(
+                { _id: currentRouteId },
+                { $set: { activeDriverCount: Math.max(0, (currentRoute.activeDriverCount || 0) - 1) } },
+                { session }
+              );
+            }
+          }
+          // Increment target route's activeDriverCount
+          await Route.updateOne(
+            { _id: payload.targetRouteId },
+            { $inc: { activeDriverCount: 1 } },
+            { session }
+          );
+          // Update user's current route
+          user.driverDetails.currentRoute = targetRoute._id;
+          user.driverDetails.routeAssignedDate = new Date();
+          await user.save({ session });
         }
-        // Increment target route's activeDriverCount
-        // Use updateOne to avoid full document validation
-        await Route.updateOne(
-          { _id: payload.targetRouteId },
-          { $inc: { activeDriverCount: 1 } },
-          { session }
-        );
-        // Update user's current route
-        user.driverDetails.currentRoute = targetRoute._id;
-        user.driverDetails.routeAssignedDate = new Date();
-        await user.save({ session });
+
         sub.adminNotes = adminNotes || sub.adminNotes;
         sub.status = 'approved';
         await sub.save({ session });
         await session.commitTransaction();
         
-        // Fetch updated route to get the new activeDriverCount
         const updatedRoute = await Route.findById(payload.targetRouteId);
         return res.json({
-          message: 'Route application approved. Driver assigned to route.',
-          user: { id: user._id, currentRoute: user.driverDetails.currentRoute },
+          message: 'Route application approved.',
           route: { id: updatedRoute._id, activeDriverCount: updatedRoute.activeDriverCount },
           submission: sub
         });

@@ -5,7 +5,10 @@ const PendingBadge = ({ count, className = '' }) => {
 
   return (
     <span
-      className={`inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full ${className}`}
+      className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 text-xs font-bold text-white rounded-full animate-pulse-glow ${className}`}
+      style={{
+        background: 'rgb(var(--brand))',
+      }}
     >
       {count > 99 ? '99+' : count}
     </span>
@@ -13,6 +16,3 @@ const PendingBadge = ({ count, className = '' }) => {
 };
 
 export default PendingBadge;
-
-
-

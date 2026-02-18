@@ -1,40 +1,41 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { DriverSidebarProvider } from '../../contexts/DriverSidebarContext';
+import React, { useState, useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
 import DriverSidebar from './DriverSidebar';
-import { useDriverSidebar } from '../../contexts/DriverSidebarContext';
-import authService from '../../services/authService';
+import { DriverSidebarProvider, useDriverSidebar } from '../../contexts/DriverSidebarContext';
 
-const DriverLayoutContent = ({ children, activeTab, setActiveTab }) => {
+const DriverLayoutContent = ({ children }) => {
   const { isCollapsed } = useDriverSidebar();
-  const user = authService.getCurrentUser();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  if (!user || user.role !== 'taxiDriver') {
-    return <Navigate to="/login" replace />;
-  }
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
-      <DriverSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          isCollapsed ? 'ml-16' : 'ml-64'
-        }`}
+    <div className="min-h-screen" style={{ backgroundColor: 'rgb(var(--bg))' }}>
+      <DriverSidebar />
+
+      <main
+        className={`transition-all duration-300 pt-16 min-h-screen ${isMobile ? 'pl-0' : isCollapsed ? 'pl-16' : 'pl-64'
+          }`}
       >
-        <main className="flex-1 overflow-y-auto p-6 pt-16">
-          {children}
-        </main>
-      </div>
+        <div className="container mx-auto p-4 md:p-6 lg:p-8">
+          {children ? children : <Outlet />}
+        </div>
+      </main>
     </div>
   );
 };
 
-const DriverLayout = ({ children, activeTab, setActiveTab }) => {
+const DriverLayout = ({ children }) => {
   return (
     <DriverSidebarProvider>
-      <DriverLayoutContent activeTab={activeTab} setActiveTab={setActiveTab}>
-        {children}
-      </DriverLayoutContent>
+      <DriverLayoutContent children={children} />
     </DriverSidebarProvider>
   );
 };

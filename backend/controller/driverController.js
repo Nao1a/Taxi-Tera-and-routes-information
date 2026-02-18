@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/UserModel');
 const UserSubmission = require('../models/UserSubmissionModel');
 const Route = require('../models/RouteModel');
+const HireRequest = require('../models/HireRequestModel');
 
 // POST /api/driver/verify
 // Uploads driver documents and creates verification submission
@@ -195,9 +196,27 @@ const getDriverStatus = asyncHandler(async (req, res) => {
     route.name = `${route.fromTera?.name || ''} → ${route.toTera?.name || ''}`;
   }
 
+  // Check for active job (Hired by Owner)
+  const activeJob = await HireRequest.findOne({ 
+    driverId: userId, 
+    status: 'hired' 
+  })
+  .populate({
+    path: 'carId',
+    select: 'make model plateNumber gebiAmount',
+    populate: {
+       path: 'routeId',
+       select: 'fromTera toTera fare',
+       populate: { path: 'fromTera toTera', select: 'name' }
+    }
+  })
+  .populate('ownerId', 'username email phoneNumber')
+  .lean();
+
   res.json({
     role: user.role,
-    driverDetails: user.driverDetails
+    driverDetails: user.driverDetails,
+    activeJob
   });
 });
 

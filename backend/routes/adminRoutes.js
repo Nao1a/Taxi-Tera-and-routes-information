@@ -32,6 +32,16 @@ router.post('/manage/users/:id/ban-account', isAuth, isAdmin, manage.banAccount)
 router.post('/manage/users/:id/unban-account', isAuth, isAdmin, manage.unbanAccount);
 router.patch('/manage/users/:id/role', isAuth, isAdmin, manage.changeUserRole);
 
+// KYC Management
+router.get('/manage/kyc-pending', isAuth, isAdmin, manage.listPendingKYC);
+router.post('/manage/kyc/:id/approve', isAuth, isAdmin, manage.approveKYC);
+router.post('/manage/kyc/:id/reject', isAuth, isAdmin, manage.rejectKYC);
+
+// Car Approvals (Libre)
+router.get('/manage/cars-pending', isAuth, isAdmin, manage.listPendingCars);
+router.post('/manage/cars/:id/approve', isAuth, isAdmin, manage.approveCar);
+router.post('/manage/cars/:id/reject', isAuth, isAdmin, manage.rejectCar);
+
 // Admin driver management
 router.get('/drivers', isAuth, isAdmin, driverController.listDrivers);
 router.post('/drivers/:id/verify', isAuth, isAdmin, driverController.verifyDriver);

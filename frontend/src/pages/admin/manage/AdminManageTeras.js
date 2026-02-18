@@ -1,29 +1,26 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { adminManage } from '../../../services/submissionService';
-import Autocomplete from '../../../components/Autocomplete';
 import LocationPicker from '../../../components/map/LocationPicker';
-import { API_BASE_URL } from '../../../config/apiConfig';
 
 const AdminManageTeras = () => {
   const [teras, setTeras] = useState([]);
   const [searchTeras, setSearchTeras] = useState('');
-  const [edit, setEdit] = useState(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const t = await adminManage.listTeras();
       setTeras(t);
     } catch (e) {
       setError(e?.response?.data?.message || 'Failed to load teras');
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const teraList = useMemo(() => {
     const q = searchTeras.trim().toLowerCase();

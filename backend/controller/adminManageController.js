@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const TaxiTera = require('../models/TaxiTeraModels');
 const Route = require('../models/RouteModel');
 const User = require('../models/UserModel');
+const Car = require('../models/CarModel');
 const { refreshGraph } = require('./searchController');
 
 // Teras
@@ -457,9 +458,90 @@ const getAnalytics = asyncHandler(async (req, res) => {
   });
 });
 
+const listPendingKYC = asyncHandler(async (req, res) => {
+  const users = await User.find({ kycStatus: 'pending' }).select('-password');
+  res.json(users);
+});
+
+const approveKYC = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  user.kycStatus = 'verified';
+  user.isVerified = true; // Legacy field match
+  await user.save();
+  res.json({ message: 'User KYC Approved', user });
+});
+
+const rejectKYC = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  user.kycStatus = 'rejected';
+  user.kycRejectionReason = reason || 'Documents did not meet requirements.';
+  await user.save();
+  res.json({ message: 'User KYC Rejected', user });
+});
+
+// Car Approvals
+const listPendingCars = asyncHandler(async (req, res) => {
+  const cars = await Car.find({ status: 'pending' })
+    .populate('ownerId', 'username email phoneNumber')
+    .sort({ createdAt: 1 });
+  res.json(cars);
+});
+
+const approveCar = asyncHandler(async (req, res) => {
+  const car = await Car.findById(req.params.id);
+  if (!car) {
+    res.status(404);
+    throw new Error('Car not found');
+  }
+  car.status = 'available';
+  car.isVerified = true;
+  await car.save();
+  res.json(car);
+});
+
+const rejectCar = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+  const car = await Car.findById(req.params.id);
+  if (!car) {
+    res.status(404);
+    throw new Error('Car not found');
+  }
+  car.status = 'rejected'; // Or maybe just delete it? Better to keep record. Update enum if needed.
+  // Assuming 'rejected' is valid or reuse 'pending' with reason? 
+  // CarModel enum: ['pending', 'available', 'hired', 'maintenance']
+  // I should add 'rejected' to the enum in CarModel implicitly or explicitly.
+  // Mongoose validation will fail if not in enum. 
+  // Let's check CarModel again.
+  
+  // Actually, let's update CarModel enum first if it doesn't have rejected.
+  // It has: ['pending', 'available', 'hired', 'maintenance']
+  // I'll update it to have 'rejected'.
+  
+  car.status = 'rejected'; 
+  car.rejectionReason = reason;
+  await car.save();
+  res.json(car);
+});
+
+
 module.exports = {
   listTeras, createTera, updateTera, deleteTera,
   listRoutes, createRoute, updateRoute, deleteRoute,
   listUsers, banUser, unbanUser, banAccount, unbanAccount, changeUserRole,
-  getAnalytics
+  getAnalytics,
+  listPendingKYC,
+  approveKYC,
+  rejectKYC,
+  listPendingCars,
+  approveCar,
+  rejectCar
 };

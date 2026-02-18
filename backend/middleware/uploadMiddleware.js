@@ -41,8 +41,16 @@ const uploadDriverDocuments = upload.fields([
   { name: 'carPhoto', maxCount: 1 },
 ]);
 
+const uploadLicense = upload.single('licenseFile');
+const uploadIdentity = upload.single('idFile');
+const uploadCarDoc = upload.single('ownershipDoc');
+
 module.exports = {
   uploadDriverDocuments,
+  uploadLicense,
+  uploadIdentity,
+  uploadCarDoc,
+  upload,
   cloudinary,
 };
 

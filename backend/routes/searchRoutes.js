@@ -1,10 +1,12 @@
 const express = require('express');
-const { searchRoute, listTeras, getTeraDetails } = require('../controller/searchController');
+const { searchRoute, listTeras, getTeraDetails, listRoutes } = require('../controller/searchController');
 const router = express.Router();
 
 // More specific routes first
 // GET /api/search/teras
 router.get('/teras', listTeras);
+// GET /api/search/routes - List all approved routes
+router.get('/routes', listRoutes);
 // GET /api/search/tera-details?tera=<teraId or teraName>
 router.get('/tera-details', getTeraDetails);
 // GET /api/search?from=<teraId>&to=<teraId>&optimizeBy=fare|time

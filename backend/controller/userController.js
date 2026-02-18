@@ -32,7 +32,11 @@ const SignupUser = asyncHandler(async (req, res) => {
 
     // Normalize role - handle string comparison
     const normalizedRole = String(role || '').trim();
-    const isTaxiDriver = normalizedRole === 'taxiDriver';
+    
+    // Validate role
+    let finalRole = 'user';
+    if (normalizedRole === 'taxiDriver') finalRole = 'taxiDriver';
+    if (normalizedRole === 'owner') finalRole = 'owner';
 
     // Prepare user data - always set role explicitly
     const userData = {
@@ -40,11 +44,11 @@ const SignupUser = asyncHandler(async (req, res) => {
         email,
         password: hashedPassword,
         isVerified: false,
-        role: isTaxiDriver ? 'taxiDriver' : 'user'
+        role: finalRole
     };
 
     // If role is 'taxiDriver', set driver details
-    if (isTaxiDriver) {
+    if (finalRole === 'taxiDriver') {
         userData.driverDetails = {
             licenseText: licenseText || '',
             carPlate: carPlate || '',
@@ -133,7 +137,15 @@ const loginUser = asyncHandler(async (req, res) => {
     const accessToken = jwt.sign({
         user: { username: user.username, id: user.id, role: user.role }
     }, process.env.JWT_SECRET, { expiresIn: '166h' });
-    res.status(200).json({ accessToken, username: user.username, email: user.email, role: user.role });
+    res.status(200).json({ 
+        accessToken, 
+        _id: user.id, // Explicitly sending _id for frontend compatibility
+        username: user.username, 
+        email: user.email, 
+        role: user.role,
+        kycStatus: user.kycStatus, // Helpful for immediate UI state
+        kycRejectionReason: user.kycRejectionReason
+    });
 })
 
 const currentUser = asyncHandler(async (req, res) => {
@@ -141,7 +153,11 @@ const currentUser = asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({ message: 'User not authenticated' });
     }
-    res.json({ user: req.user });
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ user });
 });
 
 
@@ -230,6 +246,74 @@ const deleteCurrentUser = asyncHandler(async (req, res) => {
     return res.json({ message: 'Account deleted.' });
 });
 
+// @desc    Submit Driver Verification (KYC)
+// @route   POST /api/users/verify-driver
+// @access  Private (Driver)
+const verifyDriver = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    res.status(400);
+    throw new Error('Please upload a license image');
+  }
+
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  // Allow both 'driver' and 'taxiDriver'
+  if (user.role !== 'driver' && user.role !== 'taxiDriver') {
+      res.status(403);
+      throw new Error('Only drivers can submit driver verification');
+  }
+
+  user.kycStatus = 'pending';
+  user.driverProfile = {
+    ...user.driverProfile,
+    licenseImage: req.file.path // Cloudinary URL or local path
+  };
+
+  await user.save();
+  res.json({ 
+      message: 'Verification submitted successfully', 
+      kycStatus: user.kycStatus,
+      fileUrl: req.file.path 
+  });
+});
+
+// @desc    Submit Owner Verification (KYC)
+// @route   POST /api/users/verify-owner
+// @access  Private (Owner)
+const verifyOwner = asyncHandler(async (req, res) => {
+   if (!req.file) {
+    res.status(400);
+    throw new Error('Please upload an identity document');
+  }
+
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  
+  if (user.role !== 'owner') {
+      res.status(403);
+      throw new Error('Only owners can submit owner verification');
+  }
+
+  user.kycStatus = 'pending';
+  user.ownerProfile = {
+    ...user.ownerProfile,
+    identityImage: req.file.path // Cloudinary URL or local path
+  };
+
+  await user.save();
+  res.json({ 
+      message: 'Verification submitted successfully', 
+      kycStatus: user.kycStatus,
+      fileUrl: req.file.path 
+  });
+});
 
 module.exports = {
     SignupUser,
@@ -238,5 +322,7 @@ module.exports = {
     verifyEmail,
     requestVerificationEmail,
     logoutUser,
-    deleteCurrentUser
+    deleteCurrentUser,
+    verifyDriver,
+    verifyOwner
 };

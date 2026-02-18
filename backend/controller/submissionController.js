@@ -43,7 +43,8 @@ const createSubmission = asyncHandler(async (req, res) => {
     newRoute: () => !!payload.fromTera && !!payload.toTera && (payload.fare || payload.estimatedTimeMin),
   fareUpdate: () => (payload.routeId || (payload.fromTera && payload.toTera)) && typeof payload.newFare === 'number',
     // Accept either teraId or tera (name)
-    conditionUpdate: () => (payload.teraId || payload.tera || payload.teraName) && ['good','average','poor'].includes(payload.condition || '')
+    conditionUpdate: () => (payload.teraId || payload.tera || payload.teraName) && ['good','average','poor'].includes(payload.condition || ''),
+    route_application: () => !!payload.targetRouteId
   };
   if (!validators[type]()) {
     res.status(400);

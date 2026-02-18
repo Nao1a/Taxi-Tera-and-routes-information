@@ -7,10 +7,33 @@ const UserSchema = new mongoose.Schema({
     isVerified: { type: Boolean, default: false },
     role: {
         type : String,
-        enum : ['user', 'moderator', 'admin', 'taxiDriver'],
+        enum : ['user', 'moderator', 'admin', 'taxiDriver', 'driver', 'owner'],
         default : 'user'
     },
     reputation : {type : Number, default : 5},
+    
+    // Common KYC fields
+    kycStatus: {
+      type: String,
+      enum: ["pending", "verified", "rejected", "not_submitted"],
+      default: "not_submitted",
+    },
+    kycRejectionReason: { type: String },
+
+    // Driver Specific (New Architecture)
+    driverProfile: {
+      licenseImage: { type: String }, // URL to uploaded file
+      yearsExperience: { type: Number },
+      experienceDescription: { type: String }, // "Proof" text
+      isHired: { type: Boolean, default: false },
+      currentCarId: { type: mongoose.Schema.Types.ObjectId, ref: 'Car' }
+    },
+
+    // Owner Specific
+    ownerProfile: {
+      identityImage: { type: String } // URL to ID/Passport
+    },
+
     isSubmissionBanned: { type: Boolean, default: false },
     submissionBanReason: { type: String },
     // Account ban (complete ban from platform)

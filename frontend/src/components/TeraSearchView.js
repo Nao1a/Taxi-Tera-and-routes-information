@@ -46,7 +46,7 @@ const TeraSearchView = ({ teraData }) => {
     // Add main tera marker (large red)
     const mainIcon = L.divIcon({
       className: 'custom-div-icon',
-      html: `<div style="background-color: #dc2626; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
+      html: `<div style="background-color: #d97706; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
       iconSize: [24, 24],
       iconAnchor: [12, 12],
     });
@@ -57,7 +57,7 @@ const TeraSearchView = ({ teraData }) => {
         <strong style="font-size: 16px;">${tera.name}</strong><br/>
         ${tera.address ? `<span style="color: #666;">${tera.address}</span><br/>` : ''}
         ${tera.condition ? `<span style="color: #666;">Condition: ${tera.condition}</span><br/>` : ''}
-        <strong style="color: #2563eb;">Direct destinations: ${directDestinations.length}</strong>
+        <strong style="color: #d97706;">Direct destinations: ${directDestinations.length}</strong>
       </div>
     `);
     markersRef.current.push(mainMarker);
@@ -65,7 +65,7 @@ const TeraSearchView = ({ teraData }) => {
     // Add destination markers (blue)
     const destIcon = L.divIcon({
       className: 'custom-div-icon',
-      html: `<div style="background-color: #2563eb; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.2);"></div>`,
+      html: `<div style="background-color: #92400e; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.2);"></div>`,
       iconSize: [16, 16],
       iconAnchor: [8, 8],
     });
@@ -85,7 +85,7 @@ const TeraSearchView = ({ teraData }) => {
 
         // Draw line from main tera to destination
         const line = L.polyline([tera.coordinates, dest.coordinates], {
-          color: '#2563eb',
+          color: '#d97706',
           weight: 2,
           opacity: 0.5,
           dashArray: '5, 5'
@@ -127,24 +127,23 @@ const TeraSearchView = ({ teraData }) => {
   return (
     <div className="mt-6">
       {/* Tera Info Card */}
-      <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-white dark:from-gray-800 dark:to-gray-900 border border-gray-300 dark:border-gray-700">
+      <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
         <h2 className="text-2xl font-bold mb-2 text-black dark:text-white">{tera.name}</h2>
         {tera.address && (
           <p className="text-gray-600 dark:text-gray-400 mb-2">📍 {tera.address}</p>
         )}
         {tera.condition && (
           <p className="text-gray-600 dark:text-gray-400 mb-2">
-            Condition: <span className={`font-semibold ${
-              tera.condition === 'good' ? 'text-green-600' :
-              tera.condition === 'average' ? 'text-yellow-600' :
-              'text-red-600'
-            }`}>{tera.condition}</span>
+            Condition: <span className={`font-semibold ${tera.condition === 'good' ? 'text-emerald-600' :
+                tera.condition === 'average' ? 'text-amber-600' :
+                  'text-red-600'
+              }`}>{tera.condition}</span>
           </p>
         )}
         {tera.notes && (
           <p className="text-gray-600 dark:text-gray-400 mb-2">📝 {tera.notes}</p>
         )}
-        <p className="text-lg font-semibold text-blue-600 dark:text-blue-400 mt-3">
+        <p className="text-lg font-semibold mt-3" style={{ color: 'rgb(var(--brand))' }}>
           {totalDestinations} direct destination{totalDestinations !== 1 ? 's' : ''}
         </p>
       </div>
@@ -162,18 +161,19 @@ const TeraSearchView = ({ teraData }) => {
             {directDestinations.map((dest, idx) => (
               <div
                 key={dest.id || idx}
-                className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:shadow-md transition-shadow"
+                className="p-4 rounded-xl border transition-shadow hover:shadow-md"
+                style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}
               >
                 <h4 className="font-semibold text-lg text-black dark:text-white">{dest.name}</h4>
                 <div className="mt-2 space-y-1">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    💰 Fare: <span className="font-semibold text-green-600 dark:text-green-400">{dest.fare} Birr</span>
+                    💰 Fare: <span className="font-semibold" style={{ color: 'rgb(var(--brand))' }}>{dest.fare} ETB</span>
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     ⏱️ Time: <span className="font-semibold">{dest.estimatedTimeMin} min</span>
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    🚗 Drivers: <span className="font-semibold text-blue-600 dark:text-blue-400">{dest.activeDriverCount || 0}</span>
+                    🚗 Drivers: <span className="font-semibold" style={{ color: 'rgb(var(--brand))' }}>{dest.activeDriverCount || 0}</span>
                   </p>
                 </div>
               </div>

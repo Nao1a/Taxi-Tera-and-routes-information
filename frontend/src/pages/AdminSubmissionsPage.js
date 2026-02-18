@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { adminListSubmissions, approveSubmission, rejectSubmission, adminManage } from '../services/submissionService';
 import authService from '../services/authService';
 import Autocomplete from '../components/Autocomplete';
@@ -16,14 +16,13 @@ const AdminSubmissionsPage = () => {
   const [teras, setTeras] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [users, setUsers] = useState([]);
-  const [edit, setEdit] = useState(null); // generic editing object
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [searchUsers, setSearchUsers] = useState('');
   const [searchTeras, setSearchTeras] = useState('');
   const [searchRoutes, setSearchRoutes] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       if (tab === 'submissions') {
         const data = await adminListSubmissions(status); setItems(data);
@@ -39,9 +38,9 @@ const AdminSubmissionsPage = () => {
     } catch (e) {
       setError(e?.data?.message || 'Failed to load');
     }
-  };
+  }, [tab, status]);
 
-  useEffect(() => { load(); }, [status, tab]);
+  useEffect(() => { load(); }, [load]);
 
   // filtered memoized lists for search UX
   const userList = useMemo(() => {
@@ -60,7 +59,7 @@ const AdminSubmissionsPage = () => {
     return routes.filter(r => `${r.fromTera?.name} ${r.toTera?.name} ${r._id}`.toLowerCase().includes(q));
   }, [routes, searchRoutes]);
 
-  if (!user || !['admin','moderator'].includes(user.role)) {
+  if (!user || !['admin', 'moderator'].includes(user.role)) {
     return <div className="p-6 max-w-5xl mx-auto">Admin access required.</div>;
   }
 
@@ -91,9 +90,9 @@ const AdminSubmissionsPage = () => {
     <div className="p-6 max-w-6xl mx-auto text-black dark:text-white">
       <h1 className="text-3xl font-extrabold mb-4 tracking-tight">Admin Dashboard</h1>
       <div className="flex gap-2 mb-4">
-  {['submissions','teras','routes','users','analytics'].map(t => (
-          <button key={t} onClick={()=>{setTab(t); setError(''); setNotice('');}}
-            className={`px-3 py-2 rounded-full transition ${tab===t?'bg-blue-600 text-white shadow':'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{t}</button>
+        {['submissions', 'teras', 'routes', 'users', 'analytics'].map(t => (
+          <button key={t} onClick={() => { setTab(t); setError(''); setNotice(''); }}
+            className={`px-3 py-2 rounded-full transition ${tab === t ? 'bg-[rgb(var(--brand))] text-white shadow shadow-[rgba(var(--brand-rgb),0.2)]' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{t}</button>
         ))}
       </div>
 
@@ -104,17 +103,17 @@ const AdminSubmissionsPage = () => {
         </div>
       )}
 
-      {tab==='submissions' && (
-      <div className="flex items-center gap-3 mb-4">
-  <select className="p-2 border rounded bg-white dark:bg-white/10 text-black dark:text-white" style={{ borderColor: 'rgb(var(--border))' }} value={status} onChange={e=>setStatus(e.target.value)}>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-  <input className="flex-1 p-2 border rounded bg-white dark:bg-white/10 text-black dark:text-white" style={{ borderColor: 'rgb(var(--border))' }} placeholder="Admin notes (optional)" value={note} onChange={e=>setNote(e.target.value)} />
-      </div>)}
-  {/* messages moved above */}
-      {tab==='submissions' && (<div className="space-y-3">
+      {tab === 'submissions' && (
+        <div className="flex items-center gap-3 mb-4">
+          <select className="p-2 border rounded bg-white dark:bg-white/10 text-black dark:text-white" style={{ borderColor: 'rgb(var(--border))' }} value={status} onChange={e => setStatus(e.target.value)}>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <input className="flex-1 p-2 border rounded bg-white dark:bg-white/10 text-black dark:text-white" style={{ borderColor: 'rgb(var(--border))' }} placeholder="Admin notes (optional)" value={note} onChange={e => setNote(e.target.value)} />
+        </div>)}
+      {/* messages moved above */}
+      {tab === 'submissions' && (<div className="space-y-3">
         {items.map(it => (
           <div key={it._id} className="p-4 border rounded bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
             <div className="flex justify-between">
@@ -134,8 +133,8 @@ const AdminSubmissionsPage = () => {
             )}
             {it.status === 'pending' && (
               <div className="flex gap-2 mt-3">
-                <button onClick={()=>onApprove(it._id)} className="px-3 py-1 bg-green-600 text-white rounded">Approve</button>
-                <button onClick={()=>onReject(it._id)} className="px-3 py-1 bg-red-600 text-white rounded">Reject</button>
+                <button onClick={() => onApprove(it._id)} className="px-3 py-1 bg-green-600 text-white rounded">Approve</button>
+                <button onClick={() => onReject(it._id)} className="px-3 py-1 bg-red-600 text-white rounded">Reject</button>
               </div>
             )}
           </div>
@@ -143,15 +142,15 @@ const AdminSubmissionsPage = () => {
         {items.length === 0 && <div className="text-gray-500">No items.</div>}
       </div>)}
 
-      {tab==='teras' && (
+      {tab === 'teras' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="font-semibold opacity-80">Manage Teras</div>
-            <input value={searchTeras} onChange={e=>setSearchTeras(e.target.value)} placeholder="Search teras..." className="p-2 rounded-xl bg-white dark:bg-white/10 text-black dark:text-white" style={{ border: '1px solid rgb(var(--border))' }} />
+            <input value={searchTeras} onChange={e => setSearchTeras(e.target.value)} placeholder="Search teras..." className="p-2 rounded-xl bg-white dark:bg-white/10 text-black dark:text-white" style={{ border: '1px solid rgb(var(--border))' }} />
           </div>
           <div className="p-3 border rounded" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
             <div className="font-semibold mb-2">Add Tera</div>
-            <TeraForm busy={busy} onSubmit={async (obj)=>{ try { setBusy(true); await adminManage.createTera(obj); setError(''); setNotice('Tera created'); } catch(e){ setError(e?.response?.data?.message || 'Failed to create tera'); } finally { setBusy(false); load(); } }} />
+            <TeraForm busy={busy} onSubmit={async (obj) => { try { setBusy(true); await adminManage.createTera(obj); setError(''); setNotice('Tera created'); } catch (e) { setError(e?.response?.data?.message || 'Failed to create tera'); } finally { setBusy(false); load(); } }} />
           </div>
           {teraList.map(t => {
             // Find routes that start from this tera
@@ -178,9 +177,9 @@ const AdminSubmissionsPage = () => {
                     </div>
                   </div>
                 )}
-                <TeraForm busy={busy} tera={t} onSubmit={async (obj)=>{ try { setBusy(true); await adminManage.updateTera(t._id, obj); setError(''); setNotice('Tera updated'); } catch(e){ setError(e?.response?.data?.message || 'Failed to update tera'); } finally { setBusy(false); load(); } }} />
+                <TeraForm busy={busy} tera={t} onSubmit={async (obj) => { try { setBusy(true); await adminManage.updateTera(t._id, obj); setError(''); setNotice('Tera updated'); } catch (e) { setError(e?.response?.data?.message || 'Failed to update tera'); } finally { setBusy(false); load(); } }} />
                 <div className="mt-2">
-                  <button onClick={async()=>{ setBusy(true); await adminManage.deleteTera(t._id); setBusy(false); load(); }} className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50" disabled={busy}>Delete</button>
+                  <button onClick={async () => { setBusy(true); await adminManage.deleteTera(t._id); setBusy(false); load(); }} className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50" disabled={busy}>Delete</button>
                 </div>
               </div>
             );
@@ -188,15 +187,15 @@ const AdminSubmissionsPage = () => {
         </div>
       )}
 
-      {tab==='routes' && (
+      {tab === 'routes' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="font-semibold opacity-80">Manage Routes</div>
-            <input value={searchRoutes} onChange={e=>setSearchRoutes(e.target.value)} placeholder="Search routes..." className="p-2 rounded-xl bg-white dark:bg-white/10 text-black dark:text-white" style={{ border: '1px solid rgb(var(--border))' }} />
+            <input value={searchRoutes} onChange={e => setSearchRoutes(e.target.value)} placeholder="Search routes..." className="p-2 rounded-xl bg-white dark:bg-white/10 text-black dark:text-white" style={{ border: '1px solid rgb(var(--border))' }} />
           </div>
           <div className="p-3 border rounded" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
             <div className="font-semibold mb-2">Add Route</div>
-            <RouteForm busy={busy} onSubmit={async (obj)=>{ try { setBusy(true); await adminManage.createRoute(obj); setError(''); setNotice('Route created'); } catch(e){ setError(e?.response?.data?.message || 'Failed to create route'); } finally { setBusy(false); load(); } }} />
+            <RouteForm busy={busy} onSubmit={async (obj) => { try { setBusy(true); await adminManage.createRoute(obj); setError(''); setNotice('Route created'); } catch (e) { setError(e?.response?.data?.message || 'Failed to create route'); } finally { setBusy(false); load(); } }} />
           </div>
           {routeList.map(r => (
             <div key={r._id} className="p-3 border rounded" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
@@ -204,20 +203,20 @@ const AdminSubmissionsPage = () => {
                 <div className="font-medium">{r.fromTera?.name} → {r.toTera?.name}</div>
                 <div className="text-xs text-gray-400">{r._id}</div>
               </div>
-              <RouteForm busy={busy} route={r} onSubmit={async (obj)=>{ try { setBusy(true); await adminManage.updateRoute(r._id, obj); setError(''); setNotice('Route updated'); } catch(e){ setError(e?.response?.data?.message || 'Failed to update route'); } finally { setBusy(false); load(); } }} />
+              <RouteForm busy={busy} route={r} onSubmit={async (obj) => { try { setBusy(true); await adminManage.updateRoute(r._id, obj); setError(''); setNotice('Route updated'); } catch (e) { setError(e?.response?.data?.message || 'Failed to update route'); } finally { setBusy(false); load(); } }} />
               <div className="mt-2">
-                <button onClick={async()=>{ setBusy(true); await adminManage.deleteRoute(r._id); setBusy(false); load();}} className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50" disabled={busy}>Delete</button>
+                <button onClick={async () => { setBusy(true); await adminManage.deleteRoute(r._id); setBusy(false); load(); }} className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50" disabled={busy}>Delete</button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {tab==='users' && (
+      {tab === 'users' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="font-semibold opacity-80">Manage Users</div>
-            <input value={searchUsers} onChange={e=>setSearchUsers(e.target.value)} placeholder="Search users..." className="p-2 rounded-xl bg-white dark:bg-white/10 text-black dark:text-white" style={{ border: '1px solid rgb(var(--border))' }} />
+            <input value={searchUsers} onChange={e => setSearchUsers(e.target.value)} placeholder="Search users..." className="p-2 rounded-xl bg-white dark:bg-white/10 text-black dark:text-white" style={{ border: '1px solid rgb(var(--border))' }} />
           </div>
           {userList.map(u => (
             <div key={u._id} className="p-3 border rounded" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
@@ -232,10 +231,10 @@ const AdminSubmissionsPage = () => {
                 {u.isSubmissionBanned ? (
                   <>
                     <span className="text-red-500 text-sm">BANNED</span>
-                    <button onClick={async()=>{ setBusy(true); await adminManage.unbanUser(u._id); setBusy(false); load();}} className="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50" disabled={busy}>Unban</button>
+                    <button onClick={async () => { setBusy(true); await adminManage.unbanUser(u._id); setBusy(false); load(); }} className="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50" disabled={busy}>Unban</button>
                   </>
                 ) : (
-                  <button onClick={async()=>{ if (u.role==='admin'){ setError('Cannot ban an admin user'); return; } const reason=prompt('Reason?')||undefined; setBusy(true); await adminManage.banUser(u._id, reason).catch(e=>setError(e?.response?.data?.message||'Ban failed')); setBusy(false); load();}}
+                  <button onClick={async () => { if (u.role === 'admin') { setError('Cannot ban an admin user'); return; } const reason = prompt('Reason?') || undefined; setBusy(true); await adminManage.banUser(u._id, reason).catch(e => setError(e?.response?.data?.message || 'Ban failed')); setBusy(false); load(); }}
                     className="px-3 py-1 bg-red-600 text-white rounded disabled:opacity-50" disabled={busy}>Ban</button>
                 )}
                 {u.isSubmissionBanned && u.submissionBanReason && (
@@ -247,7 +246,7 @@ const AdminSubmissionsPage = () => {
         </div>
       )}
 
-      {tab==='analytics' && (
+      {tab === 'analytics' && (
         <div className="grid md:grid-cols-3 gap-4">
           <div className="p-4 border rounded" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
             <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>Totals</div>
@@ -259,19 +258,19 @@ const AdminSubmissionsPage = () => {
           <div className="p-4 border rounded" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
             <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>Users by role</div>
             <ul className="mt-2 space-y-1 text-sm">
-              {Object.entries(users.reduce((acc,u)=>{acc[u.role]=(acc[u.role]||0)+1;return acc;},{})).map(([role,count])=> (
+              {Object.entries(users.reduce((acc, u) => { acc[u.role] = (acc[u.role] || 0) + 1; return acc; }, {})).map(([role, count]) => (
                 <li key={role} className="flex justify-between"><span>{role}</span><span className="font-semibold">{count}</span></li>
               ))}
-              {users.length===0 && <li style={{ color: 'rgb(var(--muted))' }}>No data</li>}
+              {users.length === 0 && <li style={{ color: 'rgb(var(--muted))' }}>No data</li>}
             </ul>
           </div>
           <div className="p-4 border rounded" style={{ backgroundColor: 'rgb(var(--surface))', borderColor: 'rgb(var(--border))' }}>
             <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>Submissions by status</div>
             <ul className="mt-2 space-y-1 text-sm">
-              {Object.entries(items.reduce((acc,s)=>{acc[s.status]=(acc[s.status]||0)+1;return acc;},{})).map(([st,count])=> (
+              {Object.entries(items.reduce((acc, s) => { acc[s.status] = (acc[s.status] || 0) + 1; return acc; }, {})).map(([st, count]) => (
                 <li key={st} className="flex justify-between"><span>{st}</span><span className="font-semibold">{count}</span></li>
               ))}
-              {items.length===0 && <li style={{ color: 'rgb(var(--muted))' }}>No data</li>}
+              {items.length === 0 && <li style={{ color: 'rgb(var(--muted))' }}>No data</li>}
             </ul>
           </div>
         </div>
@@ -290,14 +289,14 @@ function TeraForm({ tera, onSubmit, busy }) {
   const [notes, setNotes] = useState(tera?.notes || '');
   const [condition, setCondition] = useState(tera?.condition || 'good');
   return (
-    <form className="grid gap-2 items-end" onSubmit={e=>{e.preventDefault(); onSubmit({ name, lng, lat, address, notes, condition });}}>
+    <form className="grid gap-2 items-end" onSubmit={e => { e.preventDefault(); onSubmit({ name, lng, lat, address, notes, condition }); }}>
       <div className="grid md:grid-cols-6 gap-2">
-        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Name" value={name} onChange={e=>setName(e.target.value)} />
-        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Lng" value={lng} onChange={e=>setLng(e.target.value)} />
-        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Lat" value={lat} onChange={e=>setLat(e.target.value)} />
-        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Address" value={address} onChange={e=>setAddress(e.target.value)} />
-        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Notes" value={notes} onChange={e=>setNotes(e.target.value)} />
-        <select disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" value={condition} onChange={e=>setCondition(e.target.value)}>
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Lng" value={lng} onChange={e => setLng(e.target.value)} />
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Lat" value={lat} onChange={e => setLat(e.target.value)} />
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Address" value={address} onChange={e => setAddress(e.target.value)} />
+        <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Notes" value={notes} onChange={e => setNotes(e.target.value)} />
+        <select disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" value={condition} onChange={e => setCondition(e.target.value)}>
           <option value="good">good</option>
           <option value="average">average</option>
           <option value="poor">poor</option>
@@ -311,7 +310,7 @@ function TeraForm({ tera, onSubmit, busy }) {
           disabled={busy}
         />
       </div>
-      <button disabled={busy} className="p-2 bg-blue-600 text-white rounded disabled:opacity-50 flex items-center justify-center gap-2">
+      <button disabled={busy} className="p-2 bg-[rgb(var(--brand))] text-white rounded disabled:opacity-50 flex items-center justify-center gap-2">
         {busy && <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>}
         Save
       </button>
@@ -332,7 +331,7 @@ function RouteForm({ route, onSubmit, busy }) {
   const [teraOptions, setTeraOptions] = useState([]);
   useEffect(() => {
     // lazy load once
-    fetch(`${API_BASE_URL}/api/search/teras`).then(r=>r.ok?r.json():[]).then(setTeraOptions).catch(()=>{});
+    fetch(`${API_BASE_URL}/api/search/teras`).then(r => r.ok ? r.json() : []).then(setTeraOptions).catch(() => { });
   }, []);
 
   const isCreate = !route;
@@ -353,16 +352,16 @@ function RouteForm({ route, onSubmit, busy }) {
           <Autocomplete options={teraOptions} value={toName} onChange={setToName} placeholder="To (name or ID)" />
         </>
       )}
-      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Fare" value={fare} onChange={e=>setFare(e.target.value)} />
-      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Time (min)" value={estimatedTimeMin} onChange={e=>setEstimatedTimeMin(e.target.value)} />
-      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Distance" value={distance} onChange={e=>setDistance(e.target.value)} />
-      <select disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" value={roadCondition} onChange={e=>setRoadCondition(e.target.value)}>
+      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Fare" value={fare} onChange={e => setFare(e.target.value)} />
+      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Time (min)" value={estimatedTimeMin} onChange={e => setEstimatedTimeMin(e.target.value)} />
+      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Distance" value={distance} onChange={e => setDistance(e.target.value)} />
+      <select disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" value={roadCondition} onChange={e => setRoadCondition(e.target.value)}>
         <option value="good">good</option>
         <option value="average">average</option>
         <option value="poor">poor</option>
       </select>
-      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Availability (min)" value={availabilityMin} onChange={e=>setAvailabilityMin(e.target.value)} />
-      <button disabled={busy} className="p-2 bg-blue-600 text-white rounded md:col-span-7 flex items-center justify-center gap-2 disabled:opacity-50">
+      <input disabled={busy} className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700" placeholder="Availability (min)" value={availabilityMin} onChange={e => setAvailabilityMin(e.target.value)} />
+      <button disabled={busy} className="p-2 bg-[rgb(var(--brand))] text-white rounded md:col-span-7 flex items-center justify-center gap-2 disabled:opacity-50">
         {busy && <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>}
         Save
       </button>
@@ -426,7 +425,7 @@ function renderRouteApplication(it) {
   return (
     <div className="mt-4 space-y-3">
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="p-3 rounded bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <div className="p-3 rounded border" style={{ backgroundColor: 'rgba(var(--brand-rgb), 0.05)', borderColor: 'rgba(var(--brand-rgb), 0.2)' }}>
           <div className="font-semibold mb-1">Target Route</div>
           {p.targetRoute ? (
             <>

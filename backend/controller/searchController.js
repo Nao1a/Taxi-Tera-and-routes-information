@@ -183,4 +183,25 @@ async function getTeraDetails(req, res, next) {
   }
 }
 
-module.exports = { searchRoute, refreshGraph, listTeras, getTeraDetails };
+
+// GET /api/search/routes
+const listRoutes = async (req, res) => {
+  const Route = require('../models/RouteModel');
+  const routes = await Route.find({ status: 'approved' })
+    .populate('fromTera', 'name')
+    .populate('toTera', 'name')
+    .select('fromTera toTera fare estimatedTimeMin distanceKm')
+    .lean();
+
+  const formatted = routes.map(r => ({
+    _id: r._id,
+    name: `${r.fromTera?.name || 'Unknown'} - ${r.toTera?.name || 'Unknown'}`,
+    fare: r.fare,
+    time: r.estimatedTimeMin,
+    distance: r.distanceKm
+  }));
+
+  res.json(formatted);
+};
+
+module.exports = { searchRoute, refreshGraph, listTeras, getTeraDetails, listRoutes };

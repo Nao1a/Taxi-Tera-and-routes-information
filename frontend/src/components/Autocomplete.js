@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 /*
-  Generic Autocomplete dropdown (replaces <datalist>) with better styling & keyboard support.
+  Autocomplete dropdown with ARIA combobox support, auto-scroll, and unified theming.
   Props:
     options: [{ id, name }]
     value: string
@@ -14,6 +14,8 @@ export default function Autocomplete({ options = [], value, onChange, placeholde
   const [highlight, setHighlight] = useState(0);
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
+  const listRef = useRef(null);
+  const listboxId = useRef(`ac-listbox-${Math.random().toString(36).slice(2, 7)}`).current;
 
   const normalized = value?.toLowerCase() || '';
   const filtered = options.filter(o => o.name.toLowerCase().includes(normalized)).slice(0, 50);
@@ -21,9 +23,7 @@ export default function Autocomplete({ options = [], value, onChange, placeholde
   // Close when clicking outside
   useEffect(() => {
     function handleClick(e) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
-        setOpen(false);
-      }
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -31,19 +31,23 @@ export default function Autocomplete({ options = [], value, onChange, placeholde
 
   useEffect(() => { setHighlight(0); }, [normalized]);
 
+  // Auto-scroll highlighted item into view
+  useEffect(() => {
+    if (!open || !listRef.current) return;
+    const el = listRef.current.children[highlight];
+    if (el) el.scrollIntoView({ block: 'nearest' });
+  }, [highlight, open]);
+
   function commitSelection(idx) {
     if (filtered[idx]) {
       onChange(filtered[idx].name);
       setOpen(false);
-      // move cursor to end
       requestAnimationFrame(() => inputRef.current?.setSelectionRange?.(filtered[idx].name.length, filtered[idx].name.length));
     }
   }
 
   function handleKeyDown(e) {
-    if (!open && ['ArrowDown','ArrowUp'].includes(e.key)) {
-      setOpen(true); return;
-    }
+    if (!open && ['ArrowDown', 'ArrowUp'].includes(e.key)) { setOpen(true); return; }
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
@@ -59,8 +63,7 @@ export default function Autocomplete({ options = [], value, onChange, placeholde
       case 'Escape':
         setOpen(false);
         break;
-      default:
-        break;
+      default: break;
     }
   }
 
@@ -71,7 +74,7 @@ export default function Autocomplete({ options = [], value, onChange, placeholde
     return (
       <>
         {name.slice(0, idx)}
-        <span className="text-blue-400 font-medium">{name.slice(idx, idx + normalized.length)}</span>
+        <span className="font-semibold" style={{ color: 'rgb(var(--brand))' }}>{name.slice(idx, idx + normalized.length)}</span>
         {name.slice(idx + normalized.length)}
       </>
     );
@@ -87,28 +90,43 @@ export default function Autocomplete({ options = [], value, onChange, placeholde
         disabled={disabled}
         value={value}
         onChange={e => { onChange(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => { if (value) setOpen(true); }}
         onKeyDown={handleKeyDown}
-        className={`w-full p-4 rounded-2xl focus:outline-none focus:ring-2 bg-white dark:bg-white/10 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        style={{ border: '1px solid rgb(var(--border))' }}
+        className={`input-base ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={listboxId}
+        aria-activedescendant={open && filtered[highlight] ? `${listboxId}-${highlight}` : undefined}
+        aria-autocomplete="list"
       />
-      {open && (
-        <div className="absolute left-0 right-0 mt-1 backdrop-blur-md rounded-xl shadow-2xl max-h-64 overflow-y-auto z-20 animate-fadeIn" style={{ backgroundColor: 'rgb(var(--surface))', border: '1px solid rgb(var(--border))' }}>
-          {filtered.length === 0 && (
-            <div className="px-4 py-3 text-sm" style={{ color: 'rgb(var(--muted))' }}>No matches</div>
-          )}
+      {open && filtered.length > 0 && (
+        <div
+          ref={listRef}
+          id={listboxId}
+          role="listbox"
+          className="absolute left-0 right-0 mt-1 rounded-xl shadow-2xl max-h-64 overflow-y-auto z-20 animate-fadeIn scrollbar-thin"
+          style={{ backgroundColor: 'rgb(var(--surface))', border: '1px solid rgb(var(--border))' }}
+        >
           {filtered.map((opt, idx) => (
             <button
               type="button"
+              id={`${listboxId}-${idx}`}
+              role="option"
+              aria-selected={idx === highlight}
               key={opt.id || opt.name}
               onMouseDown={e => { e.preventDefault(); commitSelection(idx); }}
               onMouseEnter={() => setHighlight(idx)}
-              className={`w-full text-left px-4 py-2 text-sm transition-colors ${idx === highlight ? 'text-white' : ''}`}
-              style={idx === highlight ? { backgroundColor: 'rgb(var(--brand))' } : {}}
+              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${idx === highlight ? 'text-white' : ''}`}
+              style={idx === highlight ? { backgroundColor: 'rgb(var(--brand))' } : { color: 'rgb(var(--text))' }}
             >
               {highlightName(opt.name)}
             </button>
           ))}
+        </div>
+      )}
+      {open && filtered.length === 0 && value && (
+        <div className="absolute left-0 right-0 mt-1 rounded-xl shadow-lg z-20 px-4 py-3 text-sm" style={{ backgroundColor: 'rgb(var(--surface))', border: '1px solid rgb(var(--border))', color: 'rgb(var(--muted))' }}>
+          No matches
         </div>
       )}
     </div>

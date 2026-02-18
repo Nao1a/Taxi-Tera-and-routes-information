@@ -11,7 +11,10 @@ import {
   FiAlertTriangle,
   FiUserCheck,
   FiUsers,
-  FiTruck
+  FiTruck,
+  FiClock,
+  FiCheckCircle,
+  FiXCircle,
 } from 'react-icons/fi';
 
 const AdminDashboard = () => {
@@ -22,14 +25,20 @@ const AdminDashboard = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Load pending counts for each submission type
+
       const types = ['newTera', 'newRoute', 'fareUpdate', 'conditionUpdate', 'driver_verification', 'route_application'];
       const counts = {};
-      
+
       for (const type of types) {
         try {
           const data = await adminListSubmissions('pending', type);
@@ -40,21 +49,12 @@ const AdminDashboard = () => {
       }
       setPendingCounts(counts);
 
-      // Load analytics for alerts and stats
       const analyticsData = await adminManage.getAnalytics();
       setAnalytics(analyticsData);
       setRecentActivity(analyticsData.recentActivity || []);
 
-      // Generate alerts
       const alertsList = [];
-      
-      // Drivers requesting transfer with <3 months
-      if (analyticsData.drivers) {
-        // This would require checking route_application submissions with monthsServed < 3
-        // For now, we'll add a placeholder
-      }
 
-      // Pending driver verifications
       if (counts.driver_verification > 0) {
         alertsList.push({
           type: 'warning',
@@ -63,7 +63,6 @@ const AdminDashboard = () => {
         });
       }
 
-      // Routes with 0 drivers
       if (analyticsData.routes?.withNoDrivers > 0) {
         alertsList.push({
           type: 'error',
@@ -72,7 +71,6 @@ const AdminDashboard = () => {
         });
       }
 
-      // High rejection rate (if > 50%)
       if (analyticsData.submissions?.approvalRate) {
         const approvalRate = parseFloat(analyticsData.submissions.approvalRate);
         if (approvalRate < 50) {
@@ -98,25 +96,113 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-gray-500 dark:text-gray-400">Loading dashboard...</div>
+      <div className="space-y-6">
+        {/* Shimmer loading skeleton */}
+        <div className="h-10 w-64 shimmer-loading rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="glass-card-static rounded-2xl p-6 h-28 shimmer-loading" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="glass-card-static rounded-2xl p-6 h-24 shimmer-loading" />
+          ))}
+        </div>
       </div>
     );
   }
 
   const totalPending = Object.values(pendingCounts).reduce((sum, count) => sum + count, 0);
 
+  const submissionCards = [
+    {
+      label: 'New Tera',
+      icon: FiMapPin,
+      count: pendingCounts.newTera || 0,
+      path: '/admin/submissions/teras?status=pending',
+      badgeColor: 'icon-badge-sky',
+    },
+    {
+      label: 'New Route',
+      icon: FiNavigation2,
+      count: pendingCounts.newRoute || 0,
+      path: '/admin/submissions/routes?status=pending',
+      badgeColor: 'icon-badge-indigo',
+    },
+    {
+      label: 'Fare Updates',
+      icon: FiDollarSign,
+      count: pendingCounts.fareUpdate || 0,
+      path: '/admin/submissions/fares?status=pending',
+      badgeColor: 'icon-badge-emerald',
+    },
+    {
+      label: 'Conditions',
+      icon: FiAlertTriangle,
+      count: pendingCounts.conditionUpdate || 0,
+      path: '/admin/submissions/conditions?status=pending',
+      badgeColor: 'icon-badge-amber',
+    },
+    {
+      label: 'Driver KYC',
+      icon: FiUserCheck,
+      count: pendingCounts.driver_verification || 0,
+      path: '/admin/submissions/driver-kyc?status=pending',
+      badgeColor: 'icon-badge-violet',
+    },
+    {
+      label: 'Route Apps',
+      icon: FiFileText,
+      count: pendingCounts.route_application || 0,
+      path: '/admin/submissions/route-applications?status=pending',
+      badgeColor: 'icon-badge-teal',
+    },
+  ];
+
+  const statusIcon = (status) => {
+    switch (status) {
+      case 'approved':
+        return <FiCheckCircle className="text-emerald-400" size={16} />;
+      case 'rejected':
+        return <FiXCircle className="text-rose-400" size={16} />;
+      default:
+        return <FiClock className="text-amber-400" size={16} />;
+    }
+  };
+
+  const statusColor = (status) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      case 'rejected':
+        return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+      default:
+        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+    }
+  };
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Dashboard</h1>
+    <div className="space-y-8 relative">
+      {/* Header */}
+      <div className="animate-fade-in-up">
+        <h1 className="text-3xl font-extrabold font-display text-gray-900 dark:text-white">
+          {getGreeting()}, <span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">Admin</span>
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1 font-body">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+      </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="Total Pending"
           value={totalPending}
           icon={FiFileText}
           subtitle="Submissions awaiting review"
+          color="amber"
+          delay={0.05}
         />
         {analytics && (
           <>
@@ -124,16 +210,22 @@ const AdminDashboard = () => {
               title="Total Users"
               value={analytics.totals?.users || 0}
               icon={FiUsers}
+              color="indigo"
+              delay={0.1}
             />
             <StatCard
               title="Total Drivers"
               value={analytics.totals?.drivers || 0}
               icon={FiTruck}
+              color="emerald"
+              delay={0.15}
             />
             <StatCard
               title="Total Routes"
               value={analytics.totals?.routes || 0}
               icon={FiNavigation2}
+              color="sky"
+              delay={0.2}
             />
           </>
         )}
@@ -141,37 +233,39 @@ const AdminDashboard = () => {
 
       {/* Alerts */}
       {alerts.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Alerts</h2>
+        <div className="animate-fade-in-up stagger-4">
+          <h2 className="text-lg font-bold font-display text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <FiAlertTriangle className="text-amber-400" size={20} />
+            Alerts
+          </h2>
           <div className="space-y-3">
             {alerts.map((alert, idx) => (
               <div
                 key={idx}
                 onClick={alert.action}
-                className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                  alert.type === 'error'
-                    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30'
-                    : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30'
-                }`}
+                className={`glass-card rounded-xl p-4 cursor-pointer border-l-4 ${alert.type === 'error'
+                    ? 'border-l-rose-500'
+                    : 'border-l-amber-500'
+                  }`}
               >
                 <div className="flex items-center gap-3">
-                  <FiAlertTriangle
-                    className={
-                      alert.type === 'error'
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-yellow-600 dark:text-yellow-400'
-                    }
-                    size={20}
-                  />
-                  <div
-                    className={
-                      alert.type === 'error'
-                        ? 'text-red-800 dark:text-red-200'
-                        : 'text-yellow-800 dark:text-yellow-200'
-                    }
-                  >
-                    {alert.message}
+                  <div className={`p-2 rounded-lg ${alert.type === 'error'
+                      ? 'bg-rose-500/10'
+                      : 'bg-amber-500/10'
+                    }`}>
+                    <FiAlertTriangle
+                      className={
+                        alert.type === 'error'
+                          ? 'text-rose-400'
+                          : 'text-amber-400'
+                      }
+                      size={18}
+                    />
                   </div>
+                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                    {alert.message}
+                  </span>
+                  <FiNavigation2 className="ml-auto text-gray-400 dark:text-gray-500" size={14} />
                 </div>
               </div>
             ))}
@@ -179,152 +273,102 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Pending Submissions by Type */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+      {/* Pending Submissions */}
+      <div className="animate-fade-in-up stagger-5">
+        <h2 className="text-lg font-bold font-display text-gray-900 dark:text-white mb-4">
           Pending Submissions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div
-            onClick={() => navigate('/admin/submissions/teras?status=pending')}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FiMapPin className="text-blue-600 dark:text-blue-400" size={24} />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">New Tera</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Submissions</div>
+          {submissionCards.map((card, idx) => {
+            const CardIcon = card.icon;
+            return (
+              <div
+                key={idx}
+                onClick={() => navigate(card.path)}
+                className="glass-card rounded-xl p-5 cursor-pointer animate-fade-in-up group"
+                style={{ animationDelay: `${0.25 + idx * 0.05}s` }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`icon-badge ${card.badgeColor}`}>
+                      <CardIcon className="text-white relative z-10" size={20} />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900 dark:text-white font-display text-sm">
+                        {card.label}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Submissions
+                      </div>
+                    </div>
+                  </div>
+                  <PendingBadge count={card.count} />
                 </div>
               </div>
-              <PendingBadge count={pendingCounts.newTera || 0} />
-            </div>
-          </div>
-
-          <div
-            onClick={() => navigate('/admin/submissions/routes?status=pending')}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FiNavigation2 className="text-blue-600 dark:text-blue-400" size={24} />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">New Route</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Submissions</div>
-                </div>
-              </div>
-              <PendingBadge count={pendingCounts.newRoute || 0} />
-            </div>
-          </div>
-
-          <div
-            onClick={() => navigate('/admin/submissions/fares?status=pending')}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FiDollarSign className="text-blue-600 dark:text-blue-400" size={24} />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Fare Updates</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Submissions</div>
-                </div>
-              </div>
-              <PendingBadge count={pendingCounts.fareUpdate || 0} />
-            </div>
-          </div>
-
-          <div
-            onClick={() => navigate('/admin/submissions/conditions?status=pending')}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FiAlertTriangle className="text-blue-600 dark:text-blue-400" size={24} />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Condition Updates</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Submissions</div>
-                </div>
-              </div>
-              <PendingBadge count={pendingCounts.conditionUpdate || 0} />
-            </div>
-          </div>
-
-          <div
-            onClick={() => navigate('/admin/submissions/driver-kyc?status=pending')}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FiUserCheck className="text-blue-600 dark:text-blue-400" size={24} />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Driver KYC</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Submissions</div>
-                </div>
-              </div>
-              <PendingBadge count={pendingCounts.driver_verification || 0} />
-            </div>
-          </div>
-
-          <div
-            onClick={() => navigate('/admin/submissions/route-applications?status=pending')}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FiFileText className="text-blue-600 dark:text-blue-400" size={24} />
-                <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Route Applications</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Submissions</div>
-                </div>
-              </div>
-              <PendingBadge count={pendingCounts.route_application || 0} />
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {recentActivity.length > 0 ? (
-              recentActivity.map((activity, idx) => (
-                <div key={idx} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white">
-                        {activity.type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        by {activity.submittedBy?.username || 'Unknown'}
-                      </div>
+      {/* Recent Activity — Timeline Style */}
+      <div className="animate-fade-in-up stagger-7">
+        <h2 className="text-lg font-bold font-display text-gray-900 dark:text-white mb-4">
+          Recent Activity
+        </h2>
+        <div className="glass-card-static rounded-2xl overflow-hidden">
+          {recentActivity.length > 0 ? (
+            <div className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
+              {recentActivity.map((activity, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 flex items-start gap-4 hover:bg-white/30 dark:hover:bg-white/5 transition-colors animate-fade-in-up"
+                  style={{ animationDelay: `${0.4 + idx * 0.05}s` }}
+                >
+                  {/* Timeline dot */}
+                  <div className="flex flex-col items-center pt-1">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.status === 'approved'
+                        ? 'bg-emerald-500/10'
+                        : activity.status === 'rejected'
+                          ? 'bg-rose-500/10'
+                          : 'bg-amber-500/10'
+                      }`}>
+                      {statusIcon(activity.status)}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`px-3 py-1 rounded-lg text-xs font-medium ${
-                          activity.status === 'approved'
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-                            : activity.status === 'rejected'
-                            ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
-                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
-                        }`}
-                      >
-                        {activity.status?.charAt(0).toUpperCase() + activity.status?.slice(1)}
-                      </span>
-                      <div className="text-xs text-gray-400 dark:text-gray-500">
-                        {new Date(activity.createdAt).toLocaleString()}
+                    {idx < recentActivity.length - 1 && (
+                      <div className="w-px h-full min-h-[20px] bg-gray-200 dark:bg-gray-700 mt-2" />
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <span className="font-semibold text-sm text-gray-900 dark:text-white font-display">
+                          {activity.type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                          by {activity.submittedBy?.username || 'Unknown'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${statusColor(activity.status)}`}>
+                          {activity.status?.charAt(0).toUpperCase() + activity.status?.slice(1)}
+                        </span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                          {new Date(activity.createdAt).toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                No recent activity
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center">
+              <FiClock className="mx-auto text-gray-400 dark:text-gray-500 mb-3" size={32} />
+              <p className="text-gray-500 dark:text-gray-400 font-body">No recent activity</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -332,4 +376,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

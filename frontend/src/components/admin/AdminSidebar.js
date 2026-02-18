@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAdminSidebar } from '../../contexts/AdminSidebarContext';
-import { 
-  FiLayout, 
-  FiFileText, 
-  FiDatabase, 
-  FiUsers, 
+import {
+  FiLayout,
+  FiFileText,
+  FiDatabase,
+  FiUsers,
   FiBarChart2,
   FiChevronDown,
   FiChevronRight,
@@ -60,9 +60,10 @@ const AdminSidebar = () => {
         {
           type: 'section',
           key: 'driverSubmissions',
-          label: 'Driver Submissions',
+          label: 'User Verification',
           children: [
-            { path: '/admin/submissions/driver-kyc', label: 'Driver Verification (KYC)' },
+            { path: '/admin/submissions/driver-kyc', label: 'KYC Verification' },
+            { path: '/admin/submissions/cars', label: 'Car Registrations' },
             { path: '/admin/submissions/route-applications', label: 'Route Applications' }
           ]
         }
@@ -103,10 +104,9 @@ const AdminSidebar = () => {
         <NavLink
           to={item.path}
           className={({ isActive }) =>
-            `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-4 py-3 rounded-lg transition-colors ${
-              isActive
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+            `flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-4 py-3 rounded-lg transition-colors ${isActive
+              ? 'bg-[rgb(var(--brand))] text-white shadow-lg shadow-[rgba(var(--brand-rgb),0.2)]'
+              : 'text-[rgb(var(--text))] hover:bg-[rgba(var(--brand-rgb),0.08)]'
             }`
           }
           title={isCollapsed ? item.label : ''}
@@ -120,7 +120,7 @@ const AdminSidebar = () => {
     if (item.type === 'section') {
       const Icon = item.icon;
       const isExpanded = expandedSections[item.key];
-      const hasActiveChild = item.children?.some(child => 
+      const hasActiveChild = item.children?.some(child =>
         child.path && isActive(child.path)
       );
 
@@ -139,11 +139,10 @@ const AdminSidebar = () => {
                   toggleSection(item.key);
                 }
               }}
-              className={`w-full flex items-center justify-center px-4 py-3 rounded-lg transition-colors ${
-                hasActiveChild
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
+              className={`w-full flex items-center justify-center px-4 py-3 rounded-lg transition-colors ${hasActiveChild
+                ? 'bg-[rgba(var(--brand-rgb),0.1)] text-[rgb(var(--brand))]'
+                : 'text-[rgb(var(--text))] hover:bg-[rgba(var(--brand-rgb),0.08)]'
+                }`}
               title={item.label}
             >
               {Icon && <Icon className="flex-shrink-0" size={20} />}
@@ -160,11 +159,10 @@ const AdminSidebar = () => {
         <div key={item.key}>
           <button
             onClick={() => toggleSection(item.key)}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
-              hasActiveChild
-                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-            }`}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${hasActiveChild
+              ? 'bg-[rgba(var(--brand-rgb),0.1)] text-[rgb(var(--brand))]'
+              : 'text-[rgb(var(--text))] hover:bg-[rgba(var(--brand-rgb),0.08)]'
+              }`}
           >
             <div className="flex items-center gap-3">
               {Icon && <Icon className="flex-shrink-0" size={20} />}
@@ -182,10 +180,9 @@ const AdminSidebar = () => {
                     <NavLink
                       to={child.path}
                       className={({ isActive }) =>
-                        `block px-4 py-2 rounded-lg text-sm transition-colors ${
-                          isActive
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        `block px-4 py-2 rounded-lg text-sm transition-colors ${isActive
+                          ? 'bg-[rgb(var(--brand))] text-white shadow-md'
+                          : 'text-[rgb(var(--muted))] hover:bg-[rgba(var(--brand-rgb),0.08)] hover:text-[rgb(var(--text))]'
                         }`
                       }
                     >
@@ -203,18 +200,17 @@ const AdminSidebar = () => {
 
   return (
     <aside
-      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 z-40 ${
-        isCollapsed ? 'w-16' : 'w-64'
-      }`}
+      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-[rgb(var(--surface))] border-r border-[rgb(var(--border))] transition-all duration-300 z-40 ${isCollapsed ? 'w-16' : 'w-64'
+        }`}
     >
       <div className="flex flex-col h-full">
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-4 border-b border-gray-200 dark:border-gray-800`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-4 border-b border-[rgb(var(--border))]`}>
           {!isCollapsed && (
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Admin Panel</h2>
+            <h2 className="text-lg font-bold text-[rgb(var(--text))]">Admin Panel</h2>
           )}
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
+            className="p-2 rounded-lg hover:bg-[rgba(var(--brand-rgb),0.08)] transition-colors flex-shrink-0"
             aria-label="Toggle sidebar"
           >
             {isCollapsed ? <FiMenu size={20} /> : <FiX size={20} />}
