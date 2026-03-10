@@ -87,12 +87,13 @@ const ChatWindow = ({ requestId, onClose, isPopup = true, otherPartyName = "Chat
             {isPopup && <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>}
             <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-lg">{otherPartyName}</h3>
         </div>
-        {isPopup && (
+        {onClose && (
             <button 
                 onClick={onClose} 
-                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors"
+                className="p-1.5 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600 transition-colors"
+                title="Close chat"
             >
-                <FiX size={20} />
+                <FiX size={22} />
             </button>
         )}
       </div>

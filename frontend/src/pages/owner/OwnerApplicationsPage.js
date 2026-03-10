@@ -174,10 +174,16 @@ const OwnerApplicationsPage = () => {
             </div>
 
             {activeChat && (
-                <ChatWindow 
-                    requestId={activeChat} 
-                    onClose={() => setActiveChat(null)} 
-                />
+                <>
+                    <div 
+                        className="fixed inset-0 bg-black bg-opacity-30 z-40"
+                        onClick={() => setActiveChat(null)}
+                    />
+                    <ChatWindow 
+                        requestId={activeChat} 
+                        onClose={() => setActiveChat(null)} 
+                    />
+                </>
             )}
         </div>
     );

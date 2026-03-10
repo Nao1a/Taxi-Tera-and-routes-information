@@ -30,6 +30,10 @@ const updateCar = (id, formData) => {
   return api.put(API_URL + `cars/${id}`, formData);
 };
 
+const deleteCar = (id) => {
+  return api.delete(API_URL + `cars/${id}`);
+};
+
 const ownerService = {
   registerCar,
   getMyCars,
@@ -37,7 +41,8 @@ const ownerService = {
   updateApplicationStatus,
   getAllRoutes,
   toggleCarStatus,
-  updateCar
+  updateCar,
+  deleteCar
 };
 
 export default ownerService;

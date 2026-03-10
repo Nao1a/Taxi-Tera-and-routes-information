@@ -94,3 +94,5 @@ const StatCard = ({ title, value, subtitle, icon: Icon, onClick, className = '',
 };
 
 export default StatCard;
+
+

@@ -8,7 +8,8 @@ const {
   getOwnerApplications,
   updateApplicationStatus,
   toggleCarStatus,
-  updateCar
+  updateCar,
+  deleteCar
 } = require('../controller/ownerController');
 
 // All routes are protected
@@ -18,7 +19,8 @@ router.use(validateToken);
 router.post('/cars', uploadCarDoc, registerCar);
 router.get('/cars', getMyCars);
 router.put('/cars/:id/status', toggleCarStatus);
-router.put('/cars/:id', uploadCarDoc, updateCar); // Add update route
+router.put('/cars/:id', uploadCarDoc, updateCar);
+router.delete('/cars/:id', deleteCar);
 router.get('/applications', getOwnerApplications);
 router.put('/applications/:id/status', updateApplicationStatus);
 

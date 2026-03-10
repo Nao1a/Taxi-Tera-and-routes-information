@@ -26,6 +26,11 @@ const getAvailableJobs = asyncHandler(async (req, res) => {
 
   const appliedCarIds = new Set(myApplications.map(app => app.carId.toString()));
 
+  const activeHire = await HireRequest.findOne({
+    driverId: req.user.id,
+    status: 'hired'
+  });
+
   const carsWithStatus = cars.map(car => {
     const carObj = car.toObject();
     const application = myApplications.find(app => app.carId.toString() === car._id.toString());
@@ -36,7 +41,7 @@ const getAvailableJobs = asyncHandler(async (req, res) => {
     };
   });
   
-  res.json(carsWithStatus);
+  res.json({ cars: carsWithStatus, hasActiveJob: !!activeHire });
 });
 
 // @desc    Apply for a car
@@ -50,6 +55,16 @@ const applyForJob = asyncHandler(async (req, res) => {
   if (!user || user.kycStatus !== 'verified') {
     res.status(403);
     throw new Error('You must be verified to apply');
+  }
+
+  // Block if driver already has an active job
+  const activeHire = await HireRequest.findOne({
+    driverId: req.user.id,
+    status: 'hired'
+  });
+  if (activeHire) {
+    res.status(400);
+    throw new Error('You already have an active job. Leave your current position before applying to a new one.');
   }
 
   const car = await Car.findById(carId);

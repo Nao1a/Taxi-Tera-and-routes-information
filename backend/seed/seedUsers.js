@@ -12,8 +12,8 @@ async function seedUsers() {
 
   try {
     const driverUsernames = ['driver1', 'driver2', 'driver3', 'driver4', 'driver5'];
-    const ownerUsernames = ['owner1', 'owner2'];
-    const allUsernames = [...driverUsernames, ...ownerUsernames];
+    const ownerUsernamesToReplace = ['owner3', 'owner4', 'owner5', 'owner6', 'owner7', 'owner8']; // owner1, owner2 are left as-is
+    const allUsernames = [...driverUsernames, ...ownerUsernamesToReplace];
 
     console.log('Cleaning up old test users...');
     await User.deleteMany({ username: { $in: allUsernames } });
@@ -43,8 +43,8 @@ async function seedUsers() {
         console.log(`Created Driver: ${username} / ${password} (Email Verified, KYC Not Submitted)`);
     }
 
-    // 2. Seed 2 Owners
-    for (let i = 1; i <= 2; i++) {
+    // 2. Seed owners 3–8 (owner1 & owner2 are not touched)
+    for (let i = 3; i <= 8; i++) {
         const username = `owner${i}`;
         const password = `owner${i}`;
         const email = `owner${i}@example.com`;

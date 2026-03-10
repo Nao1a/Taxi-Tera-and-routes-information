@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Car = require('../models/CarModel');
 const HireRequest = require('../models/HireRequestModel');
+const Route = require('../models/RouteModel');
 const User = require('../models/UserModel');
 
 // @desc    Register a new car
@@ -229,11 +230,43 @@ const updateCar = asyncHandler(async (req, res) => {
     res.json(car);
 });
 
+// @desc    Remove (delete) a car. Ends any hire for that car and updates route count.
+// @route   DELETE /api/owner/cars/:id
+// @access  Private (Owner)
+const deleteCar = asyncHandler(async (req, res) => {
+  const car = await Car.findOne({ _id: req.params.id, ownerId: req.user.id });
+
+  if (!car) {
+    res.status(404);
+    throw new Error('Car not found');
+  }
+
+  // 1. End all hire requests for this car so the driver no longer has this as activeJob
+  await HireRequest.updateMany(
+    { carId: car._id },
+    { status: 'ended' }
+  );
+
+  // 2. If car was on a route, decrement that route's activeDriverCount
+  if (car.routeId) {
+    await Route.updateOne(
+      { _id: car.routeId },
+      { $inc: { activeDriverCount: -1 } }
+    );
+  }
+
+  // 3. Delete the car
+  await Car.findByIdAndDelete(car._id);
+
+  res.json({ message: 'Car removed successfully' });
+});
+
 module.exports = {
   registerCar,
   getMyCars,
   getOwnerApplications,
   updateApplicationStatus,
   toggleCarStatus,
-  updateCar
+  updateCar,
+  deleteCar
 };

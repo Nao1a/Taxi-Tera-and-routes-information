@@ -4,6 +4,7 @@ import hireService from '../../services/hireService';
 const DriverJobsPage = () => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [hasActiveJob, setHasActiveJob] = useState(false);
 
     // Modal state
     const [selectedJob, setSelectedJob] = useState(null);
@@ -19,7 +20,8 @@ const DriverJobsPage = () => {
     const loadJobs = async () => {
         try {
             const res = await hireService.getAvailableJobs();
-            setJobs(res.data);
+            setJobs(res.data.cars);
+            setHasActiveJob(res.data.hasActiveJob);
         } catch (error) {
             console.error(error);
         } finally {
@@ -59,6 +61,11 @@ const DriverJobsPage = () => {
     return (
         <div className="relative">
             <h1 className="text-3xl font-bold mb-6">Find a Taxi</h1>
+            {hasActiveJob && (
+                <div className="mb-4 p-3 bg-yellow-50 text-yellow-800 text-sm rounded border border-yellow-200">
+                    You are currently employed. Leave your current position before applying to a new one.
+                </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {jobs.map(car => (
                     <div key={car._id} className="bg-[rgb(var(--surface))] p-5 rounded-lg shadow border border-[rgb(var(--border))] hover:shadow-lg transition">
@@ -113,8 +120,17 @@ const DriverJobsPage = () => {
                                         car.applicationStatus === 'chatting' ? 'Chatting' :
                                             car.applicationStatus === 'hired' ? 'Hired' : 'Applied'}
                             </button>
+                        ) : hasActiveJob ? (
+                            <button
+                                disabled
+                                className="w-full mt-4 py-2 font-medium rounded cursor-not-allowed bg-gray-200 text-gray-500"
+                                title="Leave your current job before applying to a new one"
+                            >
+                                Already Employed
+                            </button>
                         ) : (
                             <button
+                                onClick={() => openApplyModal(car)}
                                 className="w-full mt-4 py-2 bg-[rgb(var(--brand))] text-white rounded hover:opacity-90 font-medium"
                             >
                                 Apply Now
@@ -143,7 +159,7 @@ const DriverJobsPage = () => {
                         <form onSubmit={submitApplication} className="p-6">
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Daily Gebi Offer (ETB)
+                                    {selectedJob.paymentFrequency} Gebi Offer (ETB)
                                 </label>
                                 <input
                                     type="number"
@@ -154,7 +170,7 @@ const DriverJobsPage = () => {
                                     placeholder={selectedJob.gebiAmount}
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
-                                    Original Ask: {selectedJob.gebiAmount} ETB. You can negotiate here.
+                                    Original Ask: {selectedJob.gebiAmount} ETB / {selectedJob.paymentFrequency}. You can negotiate here.
                                 </p>
                             </div>
 

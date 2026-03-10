@@ -5,6 +5,7 @@ import authService from '../services/authService';
 const Navbar = () => {
   const [currentUser, setCurrentUser] = useState(undefined);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -177,12 +178,18 @@ const Navbar = () => {
                       icon={<svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>}
                       label="Log out"
                     />
-                    <MenuItem
-                      to="/delete-account"
-                      danger
-                      icon={<svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>}
-                      label="Delete Account"
-                    />
+                  </div>
+
+                  <div className="border-t mt-2 pt-2" style={{ borderColor: 'rgb(var(--border))' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="flex items-center w-full text-left px-4 py-2.5 text-sm rounded-lg mx-1 transition-colors hover:bg-red-50 dark:hover:bg-red-950/20"
+                      style={{ color: 'rgb(var(--error))' }}
+                    >
+                      <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      Delete Account
+                    </button>
                   </div>
                 </div>
               )}
@@ -201,6 +208,51 @@ const Navbar = () => {
           )}
         </div>
       </div>
+
+      {/* Confirm before going to Delete Account — prevents accidental clicks */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-[1002] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-confirm-title"
+          onClick={() => { setShowDeleteConfirm(false); setDropdownOpen(false); }}
+        >
+          <div
+            className="rounded-xl shadow-2xl max-w-sm w-full p-6"
+            style={{ backgroundColor: 'rgb(var(--surface))', border: '1px solid rgb(var(--border))' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="delete-confirm-title" className="font-bold text-lg mb-2" style={{ color: 'rgb(var(--text))' }}>Delete Account?</h3>
+            <p className="text-sm mb-4" style={{ color: 'rgb(var(--muted))' }}>
+              You will be taken to a page where you must confirm with your password. Continue?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => { setShowDeleteConfirm(false); setDropdownOpen(false); }}
+                className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
+                style={{ borderColor: 'rgb(var(--border))', color: 'rgb(var(--text))' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDropdownOpen(false);
+                  navigate('/delete-account');
+                }}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: 'rgb(var(--error))' }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

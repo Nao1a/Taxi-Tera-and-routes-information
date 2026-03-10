@@ -174,6 +174,21 @@ const OwnerCarsPage = () => {
         }
     };
 
+    const handleRemoveCar = async (car) => {
+        const msg = car.status === 'hired'
+            ? `Remove "${car.make} ${car.model}" (${car.plateNumber})? The driver currently assigned to this car will no longer be driving it, and the car will be permanently removed.`
+            : `Remove "${car.make} ${car.model}" (${car.plateNumber})? This cannot be undone.`;
+        if (!window.confirm(msg)) return;
+        try {
+            await ownerService.deleteCar(car._id);
+            alert("Car removed successfully.");
+            fetchCars();
+        } catch (error) {
+            console.error(error);
+            alert(error.response?.data?.message || "Failed to remove car");
+        }
+    };
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -272,6 +287,13 @@ const OwnerCarsPage = () => {
                                         {car.status === 'available' ? 'Unlist (Set to Maintenance)' : 'List for Hire'}
                                     </button>
                                 )}
+
+                                <button
+                                    onClick={() => handleRemoveCar(car)}
+                                    className="w-full text-sm py-1.5 rounded mb-2 font-medium transition bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-700 border border-[rgb(var(--border))]"
+                                >
+                                    Remove car
+                                </button>
 
                                 <p className="text-sm mb-2">
                                     <strong>Route:</strong> {car.routeId ? (
